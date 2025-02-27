@@ -21,8 +21,8 @@ RUN_IMAGE = simplegui.load_image("https://i.imgur.com/NAhLOeo.png")
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
 
-#loading sounds
-MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
+#loading sound
+BACKROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
 
 
 player_pos = [WIDTH // 2, HEIGHT // 2]
@@ -129,12 +129,19 @@ def draw(canvas):
                       (SPRITE_WIDTH, SPRITE_HEIGHT), 
                       (WIDTH // 2, HEIGHT // 2),
                       DISPLAY_SIZE)
+    
+    
 
 
 frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)
 frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
-frame.start()
 
 #buttons
+
+#start music
+BACKROUND_MUSIC.play()
+
+
+frame.start()

@@ -1,7 +1,7 @@
 import simplegui
 
-WIDTH = 500
-HEIGHT = 400
+WIDTH = 1640
+HEIGHT = 840
 PLAYER_SPEED = 5
 FRAME_COUNT = 6
 FRAME_DELAY = 5
@@ -11,11 +11,19 @@ DISPLAY_SIZE = (100, 100)
 BACKGROUND_WIDTH = 1800
 BACKGROUND_HEIGHT = 1200
 
+#loading backrounds
 BACKGROUND = simplegui.load_image("https://i.imgur.com/XcbQXHg.png")
 IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/Xq9mtbz.png")
+
+
+#loading animations
 RUN_IMAGE = simplegui.load_image("https://i.imgur.com/NAhLOeo.png")
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
+
+#loading sounds
+MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
+
 
 player_pos = [WIDTH // 2, HEIGHT // 2]
 frame_index = 0
@@ -128,3 +136,5 @@ frame.set_draw_handler(draw)
 frame.set_keydown_handler(keydown)
 frame.set_keyup_handler(keyup)
 frame.start()
+
+#buttons

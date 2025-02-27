@@ -1,1 +1,130 @@
-Hello
+import simplegui
+
+WIDTH = 500
+HEIGHT = 400
+PLAYER_SPEED = 5
+FRAME_COUNT = 6
+FRAME_DELAY = 5
+SPRITE_WIDTH = 128
+SPRITE_HEIGHT = 128
+DISPLAY_SIZE = (100, 100)
+BACKGROUND_WIDTH = 1800
+BACKGROUND_HEIGHT = 1200
+
+BACKGROUND = simplegui.load_image("https://i.imgur.com/XcbQXHg.png")
+IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/Xq9mtbz.png")
+RUN_IMAGE = simplegui.load_image("https://i.imgur.com/NAhLOeo.png")
+IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
+RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
+
+player_pos = [WIDTH // 2, HEIGHT // 2]
+frame_index = 0
+frame_timer = 0
+is_moving = False
+facing_right = True
+
+keys = {"left": False, "right": False, "up": False, "down": False}
+
+def keydown(key):
+    global is_moving, facing_right
+    
+    if key == simplegui.KEY_MAP["left"]:
+        keys["left"] = True
+        facing_right = False
+        
+    elif key == simplegui.KEY_MAP["right"]:
+        keys["right"] = True
+        facing_right = True
+        
+    elif key == simplegui.KEY_MAP["up"]:
+        keys["up"] = True
+        
+    elif key == simplegui.KEY_MAP["down"]:
+        keys["down"] = True
+        
+    is_moving = True
+
+def keyup(key):
+    global is_moving
+    
+    if key == simplegui.KEY_MAP["left"]:
+        keys["left"] = False
+        
+    elif key == simplegui.KEY_MAP["right"]:
+        keys["right"] = False
+        
+    elif key == simplegui.KEY_MAP["up"]:
+        keys["up"] = False
+        
+    elif key == simplegui.KEY_MAP["down"]:
+        keys["down"] = False
+        
+    is_moving = any(keys.values())
+
+def update():
+    global frame_index, frame_timer, is_moving
+    
+    if keys["left"]:
+        player_pos[0] = max(WIDTH // 2, player_pos[0] - PLAYER_SPEED)
+        
+    if keys["right"]:
+        player_pos[0] = min(BACKGROUND_WIDTH - WIDTH // 2, player_pos[0] + PLAYER_SPEED)
+        
+    if keys["up"]:
+        player_pos[1] = max(HEIGHT // 2, player_pos[1] - PLAYER_SPEED)
+        
+    if keys["down"]:
+        player_pos[1] = min(BACKGROUND_HEIGHT - HEIGHT // 2, player_pos[1] + PLAYER_SPEED)
+
+    frame_timer += 1
+    if frame_timer >= FRAME_DELAY:
+        frame_timer = 0
+        frame_index = (frame_index + 1) % FRAME_COUNT
+
+def draw(canvas):
+    update()
+    
+    camera_x = player_pos[0] - WIDTH // 2
+    camera_y = player_pos[1] - HEIGHT // 2  
+    
+    camera_x = max(0, min(camera_x, BACKGROUND_WIDTH - WIDTH))
+    camera_y = max(0, min(camera_y, BACKGROUND_HEIGHT - HEIGHT))    
+    
+    canvas.draw_image(BACKGROUND, 
+                      (BACKGROUND_WIDTH / 2, BACKGROUND_HEIGHT / 2),
+                      (BACKGROUND_WIDTH, BACKGROUND_HEIGHT),
+                      (WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),  
+                       HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)), 
+                      (BACKGROUND_WIDTH, BACKGROUND_HEIGHT))
+    
+    if BACKGROUND.get_width() <= 0 or BACKGROUND.get_height() <= 0:
+        canvas.draw_text("Loading Background...", (WIDTH // 2 - 60, HEIGHT // 2), 20, "White")
+        return
+    
+    if (IDLE_IMAGE.get_width() <= 0 or IDLE_IMAGE.get_height() <= 0 or 
+        RUN_IMAGE.get_width() <= 0 or RUN_IMAGE.get_height() <= 0 or
+        IDLE_FLIPPED.get_width() <= 0 or IDLE_FLIPPED.get_height() <= 0 or
+        RUN_FLIPPED.get_width() <= 0 or RUN_FLIPPED.get_height() <= 0):
+        
+        canvas.draw_text("Loading...", (WIDTH // 2 - 40, HEIGHT // 2), 20, "White")
+        return
+    
+    if is_moving:
+        sprite_image = RUN_IMAGE if facing_right else RUN_FLIPPED
+    else:
+        sprite_image = IDLE_IMAGE if facing_right else IDLE_FLIPPED
+
+    frame_x = (frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
+
+    canvas.draw_image(sprite_image, 
+                      (frame_x, SPRITE_HEIGHT / 2), 
+                      (SPRITE_WIDTH, SPRITE_HEIGHT), 
+                      (WIDTH // 2, HEIGHT // 2),
+                      DISPLAY_SIZE)
+
+
+frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)
+frame.set_draw_handler(draw)
+frame.set_keydown_handler(keydown)
+frame.set_keyup_handler(keyup)
+frame.start()

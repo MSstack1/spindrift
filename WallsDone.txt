@@ -1,0 +1,255 @@
+
+import simplegui
+
+WIDTH = 500
+HEIGHT = 500
+PLAYER_SPEED = 5
+FRAME_COUNT = 6
+FRAME_DELAY = 5
+SPRITE_WIDTH = 128
+SPRITE_HEIGHT = 128
+DISPLAY_SIZE = (100, 100)
+verticleGrid = []
+horizontalGrid = []
+mouse_pos = (0,0)
+
+BACKGROUND = simplegui.load_image("https://i.imgur.com/9xTcjlQ.png")
+IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/Xq9mtbz.png")
+RUN_IMAGE = simplegui.load_image("https://i.imgur.com/NAhLOeo.png")
+IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
+RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
+    
+BACKGROUND_WIDTH = BACKGROUND.get_width()
+BACKGROUND_HEIGHT = BACKGROUND.get_height()
+
+counter = 0
+
+for x in range(14):
+    for y in range(9):
+        p1 = (x * BACKGROUND_WIDTH/13, y * BACKGROUND_HEIGHT/9)
+        p2 = (x * BACKGROUND_WIDTH/13, (y + 1) * BACKGROUND_HEIGHT/9)
+        verticleGrid.append((p1,p2, 0))
+
+for x in range(len(verticleGrid)):
+    print(verticleGrid[x])
+
+for x in range(10):
+    print("\n")
+
+
+
+for x in range(10):
+    for y in range(13):
+        p1 = (0 + y * (BACKGROUND_WIDTH/13), x * BACKGROUND_HEIGHT/9)
+        p2 = (0 + ((y + 1) * BACKGROUND_WIDTH/13), x * BACKGROUND_HEIGHT/9)            
+        horizontalGrid.append((p1,p2, 0))
+    
+
+
+    
+    
+for x in range(len(horizontalGrid)):
+    print(horizontalGrid[x])
+
+    
+    
+    
+player_pos = [WIDTH // 2, HEIGHT * 0.5]
+frame_index = 0
+frame_timer = 0
+is_moving = False
+facing_right = True
+
+
+
+def new_wall(side, constant, beginning, end):
+    if side == 'Vertical':
+        for x in range(len(verticleGrid)):
+            if ((verticleGrid[x][0][0] == constant) and (beginning <= verticleGrid[x][0][1] <= end)):
+                verticleGrid[x] = (verticleGrid[x][0], verticleGrid[x][1], side)                
+
+    elif side == 'Horizontal':
+        for x in range(len(horizontalGrid)):
+            if ((constant - 1 < horizontalGrid[x][0][1] < constant + 1) and (beginning <= horizontalGrid[x][0][0] <= end)):
+                horizontalGrid[x] = (horizontalGrid[x][0], horizontalGrid[x][1], side)
+                
+    else:
+        print("Incorrect format for side:", side, " constant:", constant, " beginning:", beginning, " end:", end)
+        
+                
+
+            
+
+
+            
+            
+def create_walls():
+    new_wall('Vertical', 75, 216, 362)
+    new_wall('Vertical', 375, 215, 362)
+    new_wall('Horizontal', 216, 75, 300) 
+    
+    
+create_walls()
+for x in range(len(verticleGrid)):
+    print(horizontalGrid[x])
+
+def check_collision():
+    # +15 for feet, -20 for heads
+    # +- 15 for sides
+    touchingWalls = []
+    # Check vertical walls
+    for wall in verticleGrid:
+        if wall[2] == 'Vertical':  # Check if the wall is impassable
+            wall_x = wall[0][0]  # x-coordinate of the vertical wall
+            wall_y1 = wall[0][1]  # y-coordinate of the top endpoint
+            wall_y2 = wall[1][1]  # y-coordinate of the bottom endpoint
+            
+            # Check if the player's new position overlaps with the wall
+            if (wall_x < player_pos[0] < wall_x + 15 and
+                wall_y1 - 45 < player_pos[1] < wall_y2):               
+                
+                touchingWalls.append('left') # Collision detected
+            
+            if (wall_x - 15 < player_pos[0] < wall_x and
+                wall_y1 - 45 < player_pos[1] < wall_y2):               
+                touchingWalls.append('right')
+                        
+            
+  
+    for wall in horizontalGrid:
+        if wall[2] == 'Horizontal':  # Check if the wall is impassable
+            wall_y = wall[0][1]  # y-coordinate of the horizontal wall
+            wall_x1 = wall[0][0]  # x-coordinate of the left endpoint
+            wall_x2 = wall[1][0]  # x-coordinate of the right endpoint
+
+                # Check if the player's new position overlaps with the wall
+            if (wall_y  < player_pos[1] + 40 < wall_y + 10 and
+                wall_x1 - 10 < player_pos[0] < wall_x2 + 10):
+                touchingWalls.append('up')  # Collision detected
+            
+            if (wall_y - 10 < player_pos[1] +40 < wall_y and
+                wall_x1 - 10 < player_pos[0] < wall_x2 + 10):
+                touchingWalls.append('down')  # Collision detected
+    
+    return touchingWalls
+    
+
+keys = {"left": False, "right": False, "up": False, "down": False}
+
+def keydown(key):
+    global is_moving, facing_right
+    
+    
+    
+    
+    if key == simplegui.KEY_MAP["left"]:
+        keys["left"] = True
+        facing_right = False
+        
+    elif key == simplegui.KEY_MAP["right"]:
+        keys["right"] = True
+        facing_right = True
+        
+    elif key == simplegui.KEY_MAP["up"]:
+        keys["up"] = True
+        
+    elif key == simplegui.KEY_MAP["down"]:
+        keys["down"] = True
+        
+    is_moving = True
+
+def keyup(key):
+    global is_moving
+    
+    if key == simplegui.KEY_MAP["left"]:
+        keys["left"] = False
+        
+    elif key == simplegui.KEY_MAP["right"]:
+        keys["right"] = False
+        
+    elif key == simplegui.KEY_MAP["up"]:
+        keys["up"] = False
+        
+    elif key == simplegui.KEY_MAP["down"]:
+        keys["down"] = False
+        
+    is_moving = any(keys.values())
+
+def mouse_handler(pos):
+    global mouse_pos
+    mouse_pos = pos 
+    print(mouse_pos)
+    print(player_pos)
+    
+def update():
+    global frame_index, frame_timer, is_moving
+    colStat = check_collision()
+    
+    
+    if keys["left"] and (('left' in colStat) == False):
+        player_pos[0] = player_pos[0] - PLAYER_SPEED
+        
+    if keys["right"] and (('right' in colStat) == False):
+        player_pos[0] =  player_pos[0] + PLAYER_SPEED
+        
+    if keys["up"] and (('up' in colStat) == False):
+        player_pos[1] =  player_pos[1] - PLAYER_SPEED
+        
+    if keys["down"] and (('down' in colStat) == False):
+        player_pos[1] = player_pos[1] + PLAYER_SPEED
+
+    frame_timer += 1
+    if frame_timer >= FRAME_DELAY:
+        frame_timer = 0
+        frame_index = (frame_index + 1) % FRAME_COUNT
+    
+    
+
+def draw(canvas):
+    update()
+    
+    camera_x = player_pos[0] - WIDTH // 2
+    camera_y = player_pos[1] - HEIGHT // 2  
+    
+    camera_x = camera_x
+    camera_y = camera_y    
+    
+    canvas.draw_image(BACKGROUND, 
+                      (BACKGROUND_WIDTH / 2, BACKGROUND_HEIGHT / 2),
+                      (BACKGROUND_WIDTH, BACKGROUND_HEIGHT),
+                      (WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),  
+                       HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)), 
+                      (BACKGROUND_WIDTH, BACKGROUND_HEIGHT))
+    
+    if BACKGROUND.get_width() <= 0 or BACKGROUND.get_height() <= 0:
+        canvas.draw_text("Loading Background...", (WIDTH // 2 - 60, HEIGHT // 2), 20, "White")
+        return
+    
+    if (IDLE_IMAGE.get_width() <= 0 or IDLE_IMAGE.get_height() <= 0 or 
+        RUN_IMAGE.get_width() <= 0 or RUN_IMAGE.get_height() <= 0 or
+        IDLE_FLIPPED.get_width() <= 0 or IDLE_FLIPPED.get_height() <= 0 or
+        RUN_FLIPPED.get_width() <= 0 or RUN_FLIPPED.get_height() <= 0):
+        
+        canvas.draw_text("Loading...", (WIDTH // 2 - 40, HEIGHT // 2), 20, "White")
+        return
+    
+    if is_moving:
+        sprite_image = RUN_IMAGE if facing_right else RUN_FLIPPED
+    else:
+        sprite_image = IDLE_IMAGE if facing_right else IDLE_FLIPPED
+
+    frame_x = (frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
+
+    canvas.draw_image(sprite_image, 
+                      (frame_x, SPRITE_HEIGHT / 2), 
+                      (SPRITE_WIDTH, SPRITE_HEIGHT), 
+                      (WIDTH // 2, HEIGHT // 2),
+                      DISPLAY_SIZE)
+
+
+frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)
+frame.set_draw_handler(draw)
+frame.set_keydown_handler(keydown)
+frame.set_keyup_handler(keyup)
+frame.set_mouseclick_handler(mouse_handler)
+frame.start()

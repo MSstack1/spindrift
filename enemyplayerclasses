@@ -1,0 +1,216 @@
+import simplegui
+
+# Constants
+WIDTH = 1640
+HEIGHT = 840
+PLAYER_SPEED = 5
+FRAME_COUNT = 6
+FRAME_DELAY = 5
+SPRITE_WIDTH = 128
+SPRITE_HEIGHT = 128
+DISPLAY_SIZE = (100, 100)
+BACKGROUND_WIDTH = 1800
+BACKGROUND_HEIGHT = 1200
+
+# Loading backgrounds
+BACKGROUND = simplegui.load_image("https://i.imgur.com/XcbQXHg.png")
+IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/Xq9mtbz.png")
+RUN_IMAGE = simplegui.load_image("https://i.imgur.com/NAhLOeo.png")
+ENEMY_IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/a/wASBgGE.png")
+ENEMY_RUN_IMAGE = simplegui.load_image("https://i.imgur.com/a/kcAWNXL.png")
+# Loading animations
+IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
+RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
+ENEMY_IDLE_IMAGE_FLIPPED = simplegui.load_image("https://i.imgur.com/a/7MC9wzd.png")
+ENEMY_RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/a/9QquVBm.png")
+# Loading sound
+BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
+
+
+class Player:
+    def __init__(self, x, y, speed, health, name, AP, DM):
+        self.pos = [x, y]
+        self.speed = speed
+        self.is_moving = False
+        self.facing_right = True
+        self.frame_index = 0
+        self.frame_timer = 0
+        self.keys = {"left": False, "right": False, "up": False, "down": False}
+        self.health = health
+        self.name = name
+        self.AP = AP
+        self.DM = DM
+   
+
+    def move(self):
+        """Update player position based on key presses."""
+        if self.keys["left"]:
+            self.pos[0] = max(WIDTH // 2, self.pos[0] - self.speed)
+            self.facing_right = False
+        if self.keys["right"]:
+            self.pos[0] = min(BACKGROUND_WIDTH - WIDTH // 2, self.pos[0] + self.speed)
+            self.facing_right = True
+        if self.keys["up"]:
+            self.pos[1] = max(HEIGHT // 2, self.pos[1] - self.speed)
+        if self.keys["down"]:
+            self.pos[1] = min(BACKGROUND_HEIGHT - HEIGHT // 2, self.pos[1] + self.speed)
+        
+        self.is_moving = any(self.keys.values())
+
+    def update_animation(self):
+        """Update frame index for animation."""
+        self.frame_timer += 1
+        if self.frame_timer >= FRAME_DELAY:
+            self.frame_timer = 0
+            self.frame_index = (self.frame_index + 1) % FRAME_COUNT
+
+    def draw(self, canvas, camera_x, camera_y):
+        """Draw player sprite."""
+        sprite_image = RUN_IMAGE if self.is_moving else IDLE_IMAGE
+        if not self.facing_right:
+            sprite_image = RUN_FLIPPED if self.is_moving else IDLE_FLIPPED
+        
+        frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
+
+        canvas.draw_image(sprite_image, 
+                          (frame_x, SPRITE_HEIGHT / 2), 
+                          (SPRITE_WIDTH, SPRITE_HEIGHT), 
+                          (WIDTH // 2, HEIGHT // 2), 
+                          DISPLAY_SIZE)
+
+class Enemy:
+    def __init__(self, x, y, speed, health, name, AP, DM):
+        self.pos = [x, y]
+        self.speed = speed
+        self.is_moving = False
+        self.facing_right = True
+        self.frame_index = 0
+        self.frame_timer = 0
+        self.keys = {"left": False, "right": False, "up": False, "down": False}
+        self.health = health
+        self.name = name
+        self.AP = AP
+        self.DM = DM
+   
+
+    def move(self):
+        """Update player position based on key presses."""
+        if self.keys["left"]:
+            self.pos[0] = max(WIDTH // 2, self.pos[0] - self.speed)
+            self.facing_right = False
+        if self.keys["right"]:
+            self.pos[0] = min(BACKGROUND_WIDTH - WIDTH // 2, self.pos[0] + self.speed)
+            self.facing_right = True
+        if self.keys["up"]:
+            self.pos[1] = max(HEIGHT // 2, self.pos[1] - self.speed)
+        if self.keys["down"]:
+            self.pos[1] = min(BACKGROUND_HEIGHT - HEIGHT // 2, self.pos[1] + self.speed)
+        
+        self.is_moving = any(self.keys.values())
+
+    def update_animation(self):
+        """Update frame index for animation."""
+        self.frame_timer += 1
+        if self.frame_timer >= FRAME_DELAY:
+            self.frame_timer = 0
+            self.frame_index = (self.frame_index + 1) % FRAME_COUNT
+
+    def draw(self, canvas, camera_x, camera_y):
+        """Draw player sprite."""
+        sprite_image = ENEMY_RUN_IMAGE if self.is_moving else ENEMY_IDLE_IMAGE
+        if not self.facing_right:
+            sprite_image = ENEMY_RUN_FLIPPED if self.is_moving else ENEMY_IDLE_FLIPPED
+        
+        frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
+
+        canvas.draw_image(sprite_image, 
+                          (frame_x, SPRITE_HEIGHT / 2), 
+                          (SPRITE_WIDTH, SPRITE_HEIGHT), 
+                          (WIDTH // 2, HEIGHT // 2), 
+                          DISPLAY_SIZE)
+
+
+# Initialize player
+player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SPEED, 100, "Player 1", 15, 1)
+enemy = Enemy(WIDTH // 2, HEIGHT // 2, PLAYER_SPEED, 100, "Player 1", 15, 1)
+
+def keydown(key):
+    """Handle key press events."""
+    if key == simplegui.KEY_MAP["left"]:
+        player.keys["left"] = True
+    elif key == simplegui.KEY_MAP["right"]:
+        player.keys["right"] = True
+    elif key == simplegui.KEY_MAP["up"]:
+        player.keys["up"] = True
+    elif key == simplegui.KEY_MAP["down"]:
+        player.keys["down"] = True
+
+
+def keyup(key):
+    """Handle key release events."""
+    if key == simplegui.KEY_MAP["left"]:
+        player.keys["left"] = False
+    elif key == simplegui.KEY_MAP["right"]:
+        player.keys["right"] = False
+    elif key == simplegui.KEY_MAP["up"]:
+        player.keys["up"] = False
+    elif key == simplegui.KEY_MAP["down"]:
+        player.keys["down"] = False
+
+
+def update():
+    """Update player movement and animation."""
+    player.move()
+    player.update_animation()
+    enemy.move()
+    enemy.update_animation()
+
+
+def draw(canvas):
+    """Draw game scene."""
+    update()
+
+    # Calculate camera position
+    camera_x = player.pos[0] - WIDTH // 2
+    camera_y = player.pos[1] - HEIGHT // 2  
+
+    camera_x = max(0, min(camera_x, BACKGROUND_WIDTH - WIDTH))
+    camera_y = max(0, min(camera_y, BACKGROUND_HEIGHT - HEIGHT))    
+
+    # Draw background
+    canvas.draw_image(BACKGROUND, 
+                      (BACKGROUND_WIDTH / 2, BACKGROUND_HEIGHT / 2),
+                      (BACKGROUND_WIDTH, BACKGROUND_HEIGHT),
+                      (WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),  
+                       HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)), 
+                      (BACKGROUND_WIDTH, BACKGROUND_HEIGHT))
+
+    # Check if assets are still loading
+    if BACKGROUND.get_width() <= 0 or BACKGROUND.get_height() <= 0:
+        canvas.draw_text("Loading Background...", (WIDTH // 2 - 60, HEIGHT // 2), 20, "White")
+        return
+
+    if (IDLE_IMAGE.get_width() <= 0 or RUN_IMAGE.get_width() <= 0 or 
+        IDLE_FLIPPED.get_width() <= 0 or RUN_FLIPPED.get_width() <= 0):
+        canvas.draw_text("Loading...", (WIDTH // 2 - 40, HEIGHT // 2), 20, "White")
+        return
+
+    if (ENEMY_IDLE_IMAGE.get_width() <= 0 or ENEMY_RUN_IMAGE.get_width() <= 0 or 
+        ENEMY_IDLE_FLIPPED.get_width() <= 0 or ENEMY_RUN_FLIPPED.get_width() <= 0):
+        canvas.draw_text("Loading...", (WIDTH // 2 - 40, HEIGHT // 2), 20, "White")
+        return
+    # Draw player
+    player.draw(canvas, camera_x, camera_y)
+    enemy.draw(canvas, camera_x, camera_y)
+
+# Create the game frame
+frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)
+frame.set_draw_handler(draw)
+frame.set_keydown_handler(keydown)
+frame.set_keyup_handler(keyup)
+
+# Start background music
+BACKGROUND_MUSIC.play()
+
+# Start the game
+frame.start()

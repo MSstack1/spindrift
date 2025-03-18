@@ -6,6 +6,8 @@ WIDTH = 500
 HEIGHT = 500
 PLAYER_SPEED = 5
 FRAME_COUNT = 6
+ATTACK_FRAME_COUNT = 5
+PLAYER_HURT_FRAME_COUNT = 3
 FRAME_DELAY = 5
 SPRITE_WIDTH = 128
 SPRITE_HEIGHT = 128
@@ -21,18 +23,26 @@ BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com
 # Loading sprites and animations (player and enemy)
 IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/Xq9mtbz.png")
 RUN_IMAGE = simplegui.load_image("https://i.imgur.com/NAhLOeo.png")
+HURT_IMAGE = simplegui.load_image("https://i.imgur.com/01pyiDj.png")
+ATTACK_IMAGE = simplegui.load_image("https://i.imgur.com/HbqNc4s.png")
 ENEMY_IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/atp0eco.png")
 ENEMY_RUN_IMAGE = simplegui.load_image("https://i.imgur.com/QomI2XQ.png")
+ENEMY_ATTACK_IMAGE = simplegui.load_image("https://i.imgur.com/eJ7dTBA.png")
+# Loading animations
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
+HURT_FLIPPED = simplegui.load_image("https://i.imgur.com/BPkrMM8.png")
+ATTACK_FLIPPED = simplegui.load_image("https://i.imgur.com/FRh1JQu.png")
 ENEMY_IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/pxSuood.png")
 ENEMY_RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/n8hPFhE.png")
+ENEMY_ATTACK_FLIPPED = simplegui.load_image("https://i.imgur.com/KTSabih.png")
 
 # Getter methods for backgrounds
 BACKGROUND_WIDTH = BACKGROUND.get_width()
 BACKGROUND_HEIGHT = BACKGROUND.get_height()
 BKG_2_WIDTH = BKG_2.get_width() 
 BKG_2_HEIGHT = BKG_2.get_height()
+
 
 class Welcome:
     
@@ -48,22 +58,18 @@ class Welcome:
         
         canvas.draw_image(START_BUTTON, (button_width // 2, button_height // 2), 
                               (button_width, button_height), 
-                              (WIDTH/ 2, HEIGHT /1.25), (80, 40))
-        
+                              (WIDTH/ 2, HEIGHT /1.25), (80, 40))\
         
     def welcome_click(pos):
-        
-        
         if ((WIDTH/2 - 40 <= pos[0] <= WIDTH/2 + 40) and (HEIGHT/1.25 - 20 <= pos[1] <= HEIGHT/1.25 + 20)):
             frame.set_draw_handler(Update.draw)
             frame.set_keydown_handler(Keys.keydown)
             frame.set_keyup_handler(Keys.keyup)
             frame.set_mouseclick_handler(Update.click)
+            initialize_game()
 
-    
-    
-    
-    
+
+
 class Player:
     def __init__(self, x, y, speed, health, name, AP, DM):
         self.pos = [x, y]
@@ -72,120 +78,242 @@ class Player:
         self.facing_right = True
         self.frame_index = 0
         self.frame_timer = 0
-        self.keys = {"left": False, "right": False, "up": False, "down": False}
+        self.keys = {"a": False, "d": False, "w": False, "s": False, "j": False}
         self.health = health
+        self.max_health = health
+        self.hurt = False
+        self.attack = False
         self.name = name
         self.AP = AP
         self.DM = DM
+       
    
     def move(self):
         """Update player position based on key presses."""
         
+        
         collStat = Backgrounds.check_collision(self.pos)
         
-        if self.keys["left"] and not('left' in collStat):
+        if self.keys["a"] and not('a' in collStat):
             self.pos[0] = self.pos[0] - self.speed
             self.facing_right = False
-        if self.keys["right"] and not('right' in collStat):
+        if self.keys["d"] and not('d' in collStat):
             self.pos[0] = self.pos[0] + self.speed
             self.facing_right = True
-        if self.keys["up"] and not('up' in collStat):
+        if self.keys["w"] and not('w' in collStat):
             self.pos[1] = self.pos[1] - self.speed
-        if self.keys["down"] and not('down' in collStat):
+        if self.keys["s"] and not('s' in collStat):
             self.pos[1] = self.pos[1] + self.speed
-        
+        if self.keys["j"] and not('j' in collStat):
+            self.attack = True
         self.is_moving = any(self.keys.values())
 
     def update_animation(self):
         """Update frame index for animation."""
-        self.frame_timer += 1
-        if self.frame_timer >= FRAME_DELAY:
-            self.frame_timer = 0
-            self.frame_index = (self.frame_index + 1) % FRAME_COUNT
+        if self.hurt == True:
+            self.frame_timer += 1
+            if self.frame_timer >= FRAME_DELAY:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % PLAYER_HURT_FRAME_COUNT
+                
+                if self.frame_index == 0:
+                    self.hurt = False
+        elif self.attack == True:
+            self.frame_timer += 1
+            if self.frame_timer >= FRAME_DELAY:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % ATTACK_FRAME_COUNT
+                
+                if self.frame_index == 0:
+                    #attack_move(self)
+                    self.attack = False
+        
+        else:
+            self.frame_timer += 1
+            if self.frame_timer >= FRAME_DELAY:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % FRAME_COUNT
 
+            
+    def take_damage(self, damage):
+        self.hurt = True
+        self.health -= damage
+        self.health = max(self.health, 0)
+        
+    def attack_move():
+        pass
+    
     def draw(self, canvas, camera_x, camera_y):
         """Draw player sprite."""
-        sprite_image = RUN_IMAGE if self.is_moving else IDLE_IMAGE
-        if not self.facing_right:
-            sprite_image = RUN_FLIPPED if self.is_moving else IDLE_FLIPPED
+        print(self.hurt)
+        if self.hurt and self.facing_right:
+            sprite_image = HURT_IMAGE
+        elif self.hurt and not self.facing_right:
+            sprite_image = HURT_FLIPPED
+        elif self.attack and self.facing_right:
+            sprite_image = ATTACK_IMAGE
+        elif self.attack and not self.facing_right:
+            sprite_image = ATTACK_FLIPPED
+        else:
+            sprite_image = RUN_IMAGE if self.is_moving else IDLE_IMAGE
+            if not self.facing_right:
+                sprite_image = RUN_FLIPPED if self.is_moving else IDLE_FLIPPED
         
         frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
-       
+        screen_x = WIDTH // 2
+        screen_y = HEIGHT // 2
         canvas.draw_image(sprite_image, 
                           (frame_x, SPRITE_HEIGHT / 2), 
                           (SPRITE_WIDTH, SPRITE_HEIGHT), 
                           (WIDTH // 2, HEIGHT // 2), 
                           DISPLAY_SIZE)
+        
+        # Draw Health Bar
+        bar_width = 50
+        bar_height = 5
+        bar_x = screen_x - bar_width // 2
+        bar_y = screen_y - 40  # Above player
+        
+        # Health bar background
+        canvas.draw_polygon([(bar_x, bar_y),
+                             (bar_x + bar_width, bar_y),
+                             (bar_x + bar_width, bar_y + bar_height),
+                             (bar_x, bar_y + bar_height)], 
+                            1, "black", "red")
+
+        # Draw current health
+        health_ratio = max(self.health / self.max_health, 0)  
+        if health_ratio > 0:  
+            canvas.draw_polygon([(bar_x, bar_y),
+                                 (bar_x + bar_width * health_ratio, bar_y),
+                                 (bar_x + bar_width * health_ratio, bar_y + bar_height),
+                                 (bar_x, bar_y + bar_height)], 
+                                1, "black", "green")
     def get_p(self):
         return self.pos
     
 class Enemy:
     def __init__(self, x, y, speed, health, name, AP, DM, player, xVar, yVar):
         self.player_pos = player.get_p()
-        self.pos = [x+ xVar, y+ yVar]      
-        self.movement = [0 + xVar,0 + yVar]
+        self.player = player
+        self.pos = [x + xVar, y + yVar]      
+        self.movement = [0 + xVar, 0 + yVar]
         self.is_moving = False
         self.facing_right = True
         self.speed = speed
         self.frame_index = 0
         self.frame_timer = 0
-        self.keys = {"left": False, "right": False, "up": False, "down": False}
         self.health = health
+        self.max_enemy_health = health
         self.name = name
         self.AP = AP
         self.DM = DM
-        
+        self.attack = False
+        self.is_attacking = False
+        self.attack_cooldown = 0  # Cooldown timer
+        self.attack_delay = 60  # Frames before enemy can attack again
+
+    def attack_move(self, player):
+        """Handles the enemy's attack logic."""
+        if self.is_attacking and self.attack_cooldown == 0:
+            self.attack = True
+            if random.randint(0, 2) == 1:
+                damage = self.AP * player.DM
+                self.player.take_damage(damage)
+                print(f"Player Health: {player.health}")
+            else:
+                print("Attack missed!")
+            self.attack_cooldown = self.attack_delay  # Reset cooldown
+        else:
+            print("Attack on cooldown or missed")
+
     def enemy_move(self, player):
+        """Handles enemy movement and attack decisions."""
         self.player_pos = player.get_p()
         distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5
         self.is_moving = True
-        collStat = Backgrounds.check_collision(self.pos)
-        
+        collStat = check_collision(self.pos)
+
         if distance > 200:
             self.is_moving = False
-            
-        if (self.player_pos[0] < self.pos[0]) and distance < 200 and not('left' in collStat):
+
+        # Attack only if cooldown has expired
+        if distance < 50 and not self.is_attacking and self.attack_cooldown == 0:
+            self.attack = True
+            self.is_attacking = True
+            self.attack_move(player)
+
+        # Movement logic
+        if (self.player_pos[0] < self.pos[0]) and distance < 200 and 'left' not in collStat:
             self.movement[0] -= self.speed
             self.pos[0] -= self.speed
             self.facing_right = False
-           
-            
-        if (self.player_pos[0] > self.pos[0]) and distance < 200 and not('right' in collStat):
+
+        if (self.player_pos[0] > self.pos[0]) and distance < 200 and 'right' not in collStat:
             self.movement[0] += self.speed
             self.pos[0] += self.speed
             self.facing_right = True
-            
-        if (self.player_pos[1] < self.pos[1]) and distance < 200 and not('up' in collStat):
+
+        if (self.player_pos[1] < self.pos[1]) and distance < 200 and 'up' not in collStat:
             self.movement[1] -= self.speed
             self.pos[1] -= self.speed
-        
-        if (self.player_pos[1] > self.pos[1]) and distance < 200 and not('down' in collStat):
+
+        if (self.player_pos[1] > self.pos[1]) and distance < 200 and 'down' not in collStat:
             self.movement[1] += self.speed
             self.pos[1] += self.speed
+
+        self.is_attacking = False
+        
+        # Reduce cooldown
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
 
     def update_animation(self):
         """Update frame index for animation."""
         self.frame_timer += 1
+
         if self.frame_timer >= FRAME_DELAY:
-            self.frame_timer = 0
-            self.frame_index = (self.frame_index + 1) % FRAME_COUNT
+            self.frame_timer = 0  # Reset frame timer
+
+            # If attacking, use attack animation frames
+            if self.attack:
+                self.frame_index = (self.frame_index + 1) % ATTACK_FRAME_COUNT
+
+                # If attack animation finishes, reset attack state
+                if self.frame_index == 0:
+                    self.attack = False  # Only reset attack after full animation
+                    self.is_attacking = False  # Ensure the enemy can attack again
+            else:
+                # If not attacking, use movement/idle animation
+                self.frame_index = (self.frame_index + 1) % FRAME_COUNT
+
 
     def draw(self, canvas, camera_x, camera_y):
-        """Draw player sprite."""
-        sprite_image = ENEMY_RUN_IMAGE if self.is_moving else ENEMY_IDLE_IMAGE
-        if not self.facing_right:
-            sprite_image = ENEMY_RUN_FLIPPED if self.is_moving else ENEMY_IDLE_FLIPPED
-        
-        self.enemy_move(player)
+        """Draw enemy sprite."""
+        if self.attack and self.facing_right:
+            sprite_image = ENEMY_ATTACK_IMAGE
+            self.attack_move(self)
+        elif self.attack and not self.facing_right:
+            sprite_image = ENEMY_ATTACK_FLIPPED
+            self.attack_move(self)
+        else:
+            sprite_image = ENEMY_RUN_IMAGE if self.is_moving else ENEMY_IDLE_IMAGE
+            if not self.facing_right:
+                sprite_image = ENEMY_RUN_FLIPPED if self.is_moving else ENEMY_IDLE_FLIPPED
+
+        self.enemy_move(self.player)
         frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
 
         canvas.draw_image(sprite_image, 
                           (frame_x, SPRITE_HEIGHT / 2), 
                           (SPRITE_WIDTH, SPRITE_HEIGHT), 
                           (WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2) + self.movement[0],  
-                            HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2) + self.movement[1]), 
+                           HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2) + self.movement[1]), 
                           DISPLAY_SIZE)
         
+    def get_p(self):
+        return self.pos
+       
 verticalGrid = []
 horizontalGrid = []    
     
@@ -262,61 +390,62 @@ class Backgrounds:
 class Keys:
     def keydown(key):
         """Handle key press events."""
-        if key == simplegui.KEY_MAP["left"]:
-            player.keys["left"] = True
-        elif key == simplegui.KEY_MAP["right"]:
-            player.keys["right"] = True
-        elif key == simplegui.KEY_MAP["up"]:
-            player.keys["up"] = True
-        elif key == simplegui.KEY_MAP["down"]:
-            player.keys["down"] = True
+        if key == simplegui.KEY_MAP["a"]:
+            player.keys["a"] = True
+        elif key == simplegui.KEY_MAP["d"]:
+            player.keys["d"] = True
+        elif key == simplegui.KEY_MAP["w"]:
+            player.keys["w"] = True
+        elif key == simplegui.KEY_MAP["s"]:
+            player.keys["s"] = True
+        elif key == simplegui.KEY_MAP["j"]:
+            player.keys["j"] = True
 
     def keyup(key):
         """Handle key release events."""
-        if key == simplegui.KEY_MAP["left"]:
-            player.keys["left"] = False
-        elif key == simplegui.KEY_MAP["right"]:
-            player.keys["right"] = False
-        elif key == simplegui.KEY_MAP["up"]:
-            player.keys["up"] = False
-        elif key == simplegui.KEY_MAP["down"]:
-            player.keys["down"] = False
+        if key == simplegui.KEY_MAP["a"]:
+            player.keys["a"] = False
+        elif key == simplegui.KEY_MAP["d"]:
+            player.keys["d"] = False
+        elif key == simplegui.KEY_MAP["w"]:
+            player.keys["w"] = False
+        elif key == simplegui.KEY_MAP["s"]:
+            player.keys["s"] = False
+        elif key == simplegui.KEY_MAP["j"]:
+            player.keys["j"] = False
 
-class Update:       
-
-    def draw(canvas):
-        """Draw game scene."""
-        
-        if not WELCOME_SCREEN:
-            draw_welcome_screen(canvas)
-            
-        else:
-            Update.update()
-
-            # Calculate camera position
-            camera_x = player.pos[0] - WIDTH // 2
-            camera_y = player.pos[1] - HEIGHT // 2  
-
-            # Draw background
-            Update.draw_image(canvas, BKG_2, BKG_2_WIDTH, BKG_2_HEIGHT, camera_x, camera_y, scale=3)
-
-            # Draw main map
-            Update.draw_image(canvas, BACKGROUND, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, camera_x, camera_y, scale=1)
-
-            # Draw player
-            player.draw(canvas, camera_x, camera_y)
-
-            # Draw enemies
-            for enemy in enemies:
-                enemy.draw(canvas, camera_x, camera_y)
-            
+class Update:  
     def update():
         """Update player movement and animation."""
         player.move()
         player.update_animation()
         for enemy in enemies:    
             enemy.update_animation()
-            
+
+    def draw(canvas):
+        """Draw game scene."""
+        Update.update()
+
+        # Calculate camera position
+        camera_x = player.pos[0] - WIDTH // 2
+        camera_y = player.pos[1] - HEIGHT // 2  
+
+        fixed_x = max(0, min(camera_x, BKG_2_WIDTH - WIDTH))
+        fixed_y = max(0, min(camera_y, BKG_2_HEIGHT - HEIGHT))
+
+        # Draw background
+        Update.draw_image(canvas, BKG_2, BKG_2_WIDTH, BKG_2_HEIGHT, fixed_x, fixed_y, scale=3)
+
+        # Draw main map
+        Update.draw_image(canvas, BACKGROUND, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, camera_x, camera_y, scale=1)
+
+        # Draw player
+        player.draw(canvas, camera_x, camera_y)
+        
+        # Draw enemies
+        for enemy in enemies:
+            enemy.draw(canvas, camera_x, camera_y)
+
     def draw_image(canvas, image, img_width, img_height, camera_x, camera_y, scale=1):
         """Draw an image with the given parameters."""
         if image.get_width() <= 0 or image.get_height() <= 0:
@@ -332,12 +461,59 @@ class Update:
             ),
             (img_width * scale, img_height * scale)  # Scale image
         )
-        
+
+        # Check if assets are still loading
+        if BACKGROUND.get_width() <= 0 or BACKGROUND.get_height() <= 0:
+            canvas.draw_text("Loading Background...", (WIDTH // 2 - 60, HEIGHT // 2), 20, "White")
+            return
+
+        if (IDLE_IMAGE.get_width() <= 0 or RUN_IMAGE.get_width() <= 0 or 
+            IDLE_FLIPPED.get_width() <= 0 or RUN_FLIPPED.get_width() <= 0):
+            canvas.draw_text("Loading...", (WIDTH // 2 - 40, HEIGHT // 2), 20, "White")
+            return
+
     def click(canvas):
         this = 0
-        
-        
-        
+
+def check_collision(pos):
+    touchingWalls = []
+    
+    # Check vertical walls
+    for wall in verticalGrid:
+        if wall[2] == 'Vertical':  # Check if the wall is impassable
+            wall_x = wall[0][0]  # x-coordinate of the vertical wall
+            wall_y1 = wall[0][1]  # y-coordinate of the top start point
+            wall_y2 = wall[1][1]  # y-coordinate of the bottom end point
+            
+            # Check if the player's new position overlaps with the wall
+            if (wall_x < pos[0] < wall_x + 15 and
+                wall_y1 - 45 < pos[1] < wall_y2):               
+                
+                touchingWalls.append('left') # Collision detected
+            
+            if (wall_x - 15 < pos[0] < wall_x and
+                wall_y1 - 45 < pos[1] < wall_y2):               
+                touchingWalls.append('right')
+                        
+            
+  
+    for wall in horizontalGrid:
+        if wall[2] == 'Horizontal':  # Check if the wall is impassable
+            wall_y = wall[0][1]  # y-coordinate of the horizontal wall
+            wall_x1 = wall[0][0]  # x-coordinate of the left start point
+            wall_x2 = wall[1][0]  # x-coordinate of the right end point
+
+                # Check if the player's new position overlaps with the wall
+            if (wall_y  < pos[1] + 40 < wall_y + 10 and
+                wall_x1 - 10 < pos[0] < wall_x2 + 10):
+                touchingWalls.append('up')  # Collision detected
+            
+            if (wall_y - 10 < pos[1] +40 < wall_y and
+                wall_x1 - 10 < pos[0] < wall_x2 + 10):
+                touchingWalls.append('down')  # Collision detected
+    
+    return touchingWalls
+
 def initialize_game():
     global player, enemies
     
@@ -363,12 +539,12 @@ def initialize_game():
     Backgrounds.create_grid()
     Backgrounds.create_walls()
     
-initialize_game()
 
 # Create the game frame
 frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)
 frame.set_draw_handler(Welcome.draw)
 frame.set_mouseclick_handler(Welcome.welcome_click)
+
 # Start background music
 BACKGROUND_MUSIC.play()
 

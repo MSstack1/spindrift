@@ -47,18 +47,10 @@ BKG_2_HEIGHT = BKG_2.get_height()
 class Welcome:
     
     def draw(canvas):
-        img_width = WELCOME_SCREEN.get_width()
-        img_height = WELCOME_SCREEN.get_height()
-        canvas.draw_image(WELCOME_SCREEN, (img_width // 2, img_height // 2), 
-                              (img_width, img_height), 
-                              (WIDTH/ 2, HEIGHT /2), (WIDTH, HEIGHT))
-
-        button_width = START_BUTTON.get_width()
-        button_height = START_BUTTON.get_height()
         
-        canvas.draw_image(START_BUTTON, (button_width // 2, button_height // 2), 
-                              (button_width, button_height), 
-                              (WIDTH/ 2, HEIGHT /1.25), (80, 40))\
+        Welcome.draw_image(canvas, WELCOME_SCREEN, WIDTH, HEIGHT, 2)
+
+        Welcome.draw_image(canvas, START_BUTTON, 80, 40, 1.25)
         
     def welcome_click(pos):
         if ((WIDTH/2 - 40 <= pos[0] <= WIDTH/2 + 40) and (HEIGHT/1.25 - 20 <= pos[1] <= HEIGHT/1.25 + 20)):
@@ -67,7 +59,15 @@ class Welcome:
             frame.set_keyup_handler(Keys.keyup)
             frame.set_mouseclick_handler(Update.click)
             initialize_game()
-
+            
+            
+    def draw_image(canvas, image, size_x, size_y, hight_mod):
+        image_width = image.get_width()
+        image_height = image.get_height()
+        
+        canvas.draw_image(image, (image_width // 2, image_height // 2), 
+                              (image_width, image_height), 
+                              (WIDTH/ 2, HEIGHT /hight_mod), (size_x, size_y))
 
 
 class Player:

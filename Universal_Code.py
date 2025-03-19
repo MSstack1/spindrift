@@ -37,7 +37,7 @@ ENEMY_IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/pxSuood.png")
 ENEMY_RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/n8hPFhE.png")
 ENEMY_ATTACK_FLIPPED = simplegui.load_image("https://i.imgur.com/KTSabih.png")
 
-# Getter methods for backgrounds
+
 BACKGROUND_WIDTH = BACKGROUND.get_width()
 BACKGROUND_HEIGHT = BACKGROUND.get_height()
 BKG_2_WIDTH = BKG_2.get_width() 
@@ -62,8 +62,13 @@ class Welcome:
             
             
     def draw_image(canvas, image, size_x, size_y, hight_mod):
+
         image_width = image.get_width()
         image_height = image.get_height()
+
+        if image_width <= 0 or image_height <= 0:
+            canvas.draw_text("Loading Image...", (WIDTH // 2 - 60, HEIGHT // 2), 20, "White")
+            return
         
         canvas.draw_image(image, (image_width // 2, image_height // 2), 
                               (image_width, image_height), 
@@ -434,10 +439,10 @@ class Update:
         fixed_y = max(0, min(camera_y, BKG_2_HEIGHT - HEIGHT))
 
         # Draw background
-        Update.draw_image(canvas, BKG_2, BKG_2_WIDTH, BKG_2_HEIGHT, fixed_x, fixed_y, scale=3)
+        Update.draw_image(canvas, BKG_2, fixed_x, fixed_y, scale=3)
 
         # Draw main map
-        Update.draw_image(canvas, BACKGROUND, BACKGROUND_WIDTH, BACKGROUND_HEIGHT, camera_x, camera_y, scale=1)
+        Update.draw_image(canvas, BACKGROUND, camera_x, camera_y, scale=1)
 
         # Draw player
         player.draw(canvas, camera_x, camera_y)
@@ -446,9 +451,13 @@ class Update:
         for enemy in enemies:
             enemy.draw(canvas, camera_x, camera_y)
 
-    def draw_image(canvas, image, img_width, img_height, camera_x, camera_y, scale=1):
+    def draw_image(canvas, image, camera_x, camera_y, scale=1):
         """Draw an image with the given parameters."""
-        if image.get_width() <= 0 or image.get_height() <= 0:
+
+        img_width = image.get_width()
+        img_height = image.get_height()
+        
+        if img_width <= 0 or img_height <= 0:
             canvas.draw_text("Loading Image...", (WIDTH // 2 - 60, HEIGHT // 2), 20, "White")
             return
         

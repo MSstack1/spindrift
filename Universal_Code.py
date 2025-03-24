@@ -12,10 +12,12 @@ FRAME_DELAY = 5
 SPRITE_WIDTH = 128
 SPRITE_HEIGHT = 128
 DISPLAY_SIZE = (100, 100)
+DEATH_SCREEN = False
 
 # Loading backgrounds and sounds
 WELCOME_SCREEN = simplegui.load_image("https://i.imgur.com/Zhl2jMw.jpeg")
 START_BUTTON = simplegui.load_image("https://i.imgur.com/MqgJtv8.png")
+WASTED = simplegui.load_image("https://i.imgur.com/pFupxi8.png")
 BACKGROUND = simplegui.load_image("https://i.imgur.com/DudAEjc.png")
 BKG_2 = simplegui.load_image("https://i.imgur.com/O671jzf.jpeg")
 BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
@@ -51,6 +53,9 @@ class Welcome:
         Welcome.draw_image(canvas, WELCOME_SCREEN, WIDTH, HEIGHT, 2)
 
         Welcome.draw_image(canvas, START_BUTTON, 80, 40, 1.25)
+        
+        if DEATH_SCREEN:
+            Welcome.draw_image(canvas, WASTED, 250, 100, 2)
         
     def welcome_click(pos):
         if ((WIDTH/2 - 40 <= pos[0] <= WIDTH/2 + 40) and (HEIGHT/1.25 - 20 <= pos[1] <= HEIGHT/1.25 + 20)):
@@ -549,15 +554,17 @@ def initialize_game():
     Backgrounds.create_walls()
     
 def game_reset():
+    global DEATH_SCREEN
     frame.set_draw_handler(Welcome.draw)
     frame.set_mouseclick_handler(Welcome.welcome_click)
+    DEATH_SCREEN = True
     enemies.clear()
-    
 
 # Create the game frame
 frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)
 frame.set_draw_handler(Welcome.draw)
 frame.set_mouseclick_handler(Welcome.welcome_click)
+frame.add_button("Test restart", game_reset, 150)
 
 # Start background music
 BACKGROUND_MUSIC.play()

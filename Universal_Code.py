@@ -548,6 +548,11 @@ def initialize_game():
     Backgrounds.create_grid()
     Backgrounds.create_walls()
     
+def game_reset():
+    frame.set_draw_handler(Welcome.draw)
+    frame.set_mouseclick_handler(Welcome.welcome_click)
+    enemies.clear()
+    
 
 # Create the game frame
 frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)

@@ -8,11 +8,15 @@ PLAYER_SPEED = 5
 FRAME_COUNT = 6
 ATTACK_FRAME_COUNT = 5
 PLAYER_HURT_FRAME_COUNT = 3
+DEAD_FRAME_COUNT = 4
 FRAME_DELAY = 5
 SPRITE_WIDTH = 128
 SPRITE_HEIGHT = 128
 DISPLAY_SIZE = (100, 100)
 DEATH_SCREEN = False
+LIVES = 3
+SCORE = 0
+HIGH_SCORE = 0
 
 # Loading backgrounds and sounds
 WELCOME_SCREEN = simplegui.load_image("https://i.imgur.com/Zhl2jMw.jpeg")
@@ -30,6 +34,7 @@ ATTACK_IMAGE = simplegui.load_image("https://i.imgur.com/HbqNc4s.png")
 ENEMY_IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/atp0eco.png")
 ENEMY_RUN_IMAGE = simplegui.load_image("https://i.imgur.com/QomI2XQ.png")
 ENEMY_ATTACK_IMAGE = simplegui.load_image("https://i.imgur.com/eJ7dTBA.png")
+ENEMY_DEATH_IMAGE = simplegui.load_image("https://i.imgur.com/mPEEU4v.png")
 # Loading animations
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
@@ -38,24 +43,26 @@ ATTACK_FLIPPED = simplegui.load_image("https://i.imgur.com/FRh1JQu.png")
 ENEMY_IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/pxSuood.png")
 ENEMY_RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/n8hPFhE.png")
 ENEMY_ATTACK_FLIPPED = simplegui.load_image("https://i.imgur.com/KTSabih.png")
+ENEMY_DEATH_FLIPPED = simplegui.load_image("https://i.imgur.com/fdffUJr.png")
 
 
 BACKGROUND_WIDTH = BACKGROUND.get_width()
 BACKGROUND_HEIGHT = BACKGROUND.get_height()
 BKG_2_WIDTH = BKG_2.get_width() 
 BKG_2_HEIGHT = BKG_2.get_height()
-
+LIVES_IMAGE = simplegui.load_image("https://i.imgur.com/Mw3kXLa.png")
 
 class Welcome:
     
     def draw(canvas):
-        
+        global HIGH_SCORE
         Welcome.draw_image(canvas, WELCOME_SCREEN, WIDTH, HEIGHT, 2)
-
+        canvas.draw_text(f"High Score: {HIGH_SCORE}", (10, 20), 20, "White")
         Welcome.draw_image(canvas, START_BUTTON, 80, 40, 1.25)
         
         if DEATH_SCREEN:
             Welcome.draw_image(canvas, WASTED, 250, 100, 2)
+            canvas.draw_text(f"Score last game: {SCORE}", (30, 40), 20, "White")
         
     def welcome_click(pos):
         if ((WIDTH/2 - 40 <= pos[0] <= WIDTH/2 + 40) and (HEIGHT/1.25 - 20 <= pos[1] <= HEIGHT/1.25 + 20)):
@@ -83,7 +90,7 @@ class Welcome:
 class Player:
     def __init__(self, x, y, speed, health, name, AP, DM):
         self.pos = [x, y]
-        self.speed = speed
+        self.OGspeed = speed
         self.is_moving = False
         self.facing_right = True
         self.frame_index = 0
@@ -96,27 +103,52 @@ class Player:
         self.name = name
         self.AP = AP
         self.DM = DM
+        self.attack_cooldown = 0
        
    
     def move(self):
         """Update player position based on key presses."""
         
         
-        collStat = Backgrounds.check_collision(self.pos)
+        collStat = Backgrounds.check_collision(self.pos, self.hitbox(), 'player')
+        speed_x = 0
+        speed_y = 0
+        self.is_moving = False
         
-        if self.keys["a"] and not('a' in collStat):
-            self.pos[0] = self.pos[0] - self.speed
+        
+        if self.keys["a"] and not('left' in collStat):
+            speed_x = 0 - self.OGspeed
             self.facing_right = False
-        if self.keys["d"] and not('d' in collStat):
-            self.pos[0] = self.pos[0] + self.speed
+            self.is_moving = True
+            
+        elif self.keys["d"] and not("right" in collStat):
+            speed_x = 0 + self.OGspeed
             self.facing_right = True
-        if self.keys["w"] and not('w' in collStat):
-            self.pos[1] = self.pos[1] - self.speed
-        if self.keys["s"] and not('s' in collStat):
-            self.pos[1] = self.pos[1] + self.speed
-        if self.keys["j"] and not('j' in collStat):
-            self.attack = True
-        self.is_moving = any(self.keys.values())
+            self.is_moving = True
+            
+        if self.keys["w"] and not("up" in collStat):
+            speed_y = 0 - self.OGspeed
+            self.is_moving = True
+            
+        elif self.keys["s"] and not("down" in collStat):
+            speed_y = 0 + self.OGspeed
+            self.is_moving = True
+        
+        elif self.keys["j"] and self.attack_cooldown == 0:
+            self.attack_cooldown = 50
+            self.attack_move()
+        
+        if (self.keys["a"] or self.keys["d"]) and (self.keys["w"] or self.keys["s"]):
+            speed_x *= 1 / (2**0.5)
+            speed_y *= 1 / (2**0.5)
+            
+        
+        
+        self.pos[0] += speed_x
+        self.pos[1] += speed_y
+        
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
 
     def update_animation(self):
         """Update frame index for animation."""
@@ -146,16 +178,51 @@ class Player:
 
             
     def take_damage(self, damage):
-        self.hurt = True
-        self.health -= damage
-        self.health = max(self.health, 0)
+            global LIVES
+            self.hurt = True
+            self.health -= damage
+            self.health = max(self.health, 0)
+            if self.health <= 0:
+                LIVES -= 1
+                self.pos = [562,67]
+                self.health = 100
+                if LIVES <= 0:
+                    game_reset()
+                
         
-    def attack_move():
-        pass
+    def attack_move(self):
+        print (self.pos)
+        self.attack = True
+        attack_range = 50  # Define the attack range       
+        
+        for enemy in enemies:
+                
+            distance = ((self.pos[0] - enemy.pos[0]) ** 2 + (self.pos[1] - enemy.pos[1]) ** 2) ** 0.5
+
+            # Check if the distance is within the attack range
+            if distance <= attack_range:
+                # If there's a hit, apply damage to the enemy
+                enemy.take_damage(self.AP) 
+                print(f"Hit {enemy.name} for {self.AP} damage!")  # Debugging line
+                break     
+    
+    
+    def hitbox(self):
+        #box[0] is left, 1 is right, 2 is top, 3 is bottom
+        self.Hitbox=[]
+        position = self.pos
+        self.Hitbox.append((((WIDTH // 2 - 15), (HEIGHT // 2  - 5)),((WIDTH // 2 - 15), (HEIGHT // 2 + 50))))
+        self.Hitbox.append((((WIDTH // 2 + 15), (HEIGHT // 2 - 5)),((WIDTH // 2 + 15), (HEIGHT // 2 + 50))))
+        self.Hitbox.append((self.Hitbox[0][0], self.Hitbox[1][0]))
+        self.Hitbox.append((self.Hitbox[0][1], self.Hitbox[1][1]))
+        
+        
+        
+        return self.Hitbox
     
     def draw(self, canvas, camera_x, camera_y):
         """Draw player sprite."""
-        print(self.hurt)
+        #print(self.hurt)
         if self.hurt and self.facing_right:
             sprite_image = HURT_IMAGE
         elif self.hurt and not self.facing_right:
@@ -204,13 +271,15 @@ class Player:
     
 class Enemy:
     def __init__(self, x, y, speed, health, name, AP, DM, player, xVar, yVar):
+        self.adjusted_x = 0
+        self.adjusted_y = 0        
         self.player_pos = player.get_p()
         self.player = player
         self.pos = [x + xVar, y + yVar]      
         self.movement = [0 + xVar, 0 + yVar]
-        self.is_moving = False
+        self.state = 'idle'
         self.facing_right = True
-        self.speed = speed
+        self.OGspeed = speed
         self.frame_index = 0
         self.frame_timer = 0
         self.health = health
@@ -219,106 +288,242 @@ class Enemy:
         self.AP = AP
         self.DM = DM
         self.attack = False
-        self.is_attacking = False
         self.attack_cooldown = 0  # Cooldown timer
-        self.attack_delay = 60  # Frames before enemy can attack again
-
-    def attack_move(self, player):
-        """Handles the enemy's attack logic."""
-        if self.is_attacking and self.attack_cooldown == 0:
-            self.attack = True
-            if random.randint(0, 2) == 1:
-                damage = self.AP * player.DM
-                self.player.take_damage(damage)
-                print(f"Player Health: {player.health}")
-            else:
-                print("Attack missed!")
-            self.attack_cooldown = self.attack_delay  # Reset cooldown
+        self.attack_delay = 180  # Frames before enemy can attack again
+        self.counter_a = 3
+        self.counter_b = 5
+        self.notMoving = True
+        self.escapeTime = 501
+    
+    def check_hit(self, player):
+        
+        pHitbox = self.player.hitbox()
+        eHitbox = self.hitbox()
+        enemy_rect = (eHitbox[0][0][0], eHitbox[2][0][1], eHitbox[1][0][0], eHitbox[3][0][1])
+        player_rect = (pHitbox[0][0][0], pHitbox[2][0][1], pHitbox[1][0][0], pHitbox[3][0][1]) 
+        
+        if ((enemy_rect[2] > player_rect[0] and enemy_rect[0] < player_rect[0] and enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3]) or \                                                         
+            (enemy_rect[0]  <= player_rect[2] and enemy_rect[2] > player_rect[2] and 
+            enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3])):
+              
+            damage = self.AP * self.player.DM
+            self.player.take_damage(damage)
+            self.state = 'idle'
+            self.frame_index = 0
+            
+    def take_damage(self, dmg):
+        self.health -= dmg
+        if self.health <= 0:
+            self.state = "dead"
+            self.frame_index = 0
         else:
-            print("Attack on cooldown or missed")
+            pass
+            
 
     def enemy_move(self, player):
         """Handles enemy movement and attack decisions."""
-        self.player_pos = player.get_p()
-        distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5
-        self.is_moving = True
-        collStat = check_collision(self.pos)
+        #setting player position, distance from player and any collisions
+        if self.state != "dead":
+            
+            self.player_pos = player.get_p()        
+            distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5        
+            if (self.movement == [0,0] and distance > 50):
+                notMoving = True
 
-        if distance > 200:
-            self.is_moving = False
+            else:
+                notMoving = False
 
-        # Attack only if cooldown has expired
-        if distance < 50 and not self.is_attacking and self.attack_cooldown == 0:
-            self.attack = True
-            self.is_attacking = True
-            self.attack_move(player)
+            speed = self.OGspeed             
+            collStat = Backgrounds.check_collision(self.pos, self.hitbox(), 'enemy')        
 
-        # Movement logic
-        if (self.player_pos[0] < self.pos[0]) and distance < 200 and 'left' not in collStat:
-            self.movement[0] -= self.speed
-            self.pos[0] -= self.speed
-            self.facing_right = False
+            if len(collStat) > 3:
+                escapeTime = 0
 
-        if (self.player_pos[0] > self.pos[0]) and distance < 200 and 'right' not in collStat:
-            self.movement[0] += self.speed
-            self.pos[0] += self.speed
-            self.facing_right = True
+            self.movement = [0,0]
 
-        if (self.player_pos[1] < self.pos[1]) and distance < 200 and 'up' not in collStat:
-            self.movement[1] -= self.speed
-            self.pos[1] -= self.speed
 
-        if (self.player_pos[1] > self.pos[1]) and distance < 200 and 'down' not in collStat:
-            self.movement[1] += self.speed
-            self.pos[1] += self.speed
+            if distance > 200 and self.escapeTime > 180:
+                self.state = 'idle'
+                self.frame_index = 0
 
-        self.is_attacking = False
+
+            # Attack only if cooldown has expired
+            elif distance < 50 and self.state != 'attack' and self.attack_cooldown == 0 and self.escapeTime > 500:
+                self.attack = True
+                self.state = 'attack'
+                self.attack_cooldown = self.attack_delay
+                self.frame_index = 0
+
+
+
+
+            #if not attacking and in distance of player, move towards players position
+            elif (self.state != 'attack') and self.escapeTime > 500:
+                self.state = 'moving'
+                
+
+
+                #normalise speed when going diagonal left
+                if ((self.player_pos[0] - self.pos[0] < -10) and \
+                    not('left' in collStat)):
+
+                    if self.player_pos[1] - self.pos[1] < -10 and not('up' in collStat):
+                        speed = (2 * speed) **0.5
+                        self.movement[1] -= speed
+
+                    elif self.player_pos[1] - self.pos[1] > 10 and not('down' in collStat):
+                        speed = (2 * speed) **0.5                    
+                        self.movement[1] += speed
+
+                    self.movement[0] -= speed
+                    self.facing_right = False            
+
+
+                #normalise speeds when going diagonal right
+                elif (self.player_pos[0] - self.pos[0] > 10) and \
+                    not('right' in collStat):
+
+                    if self.player_pos[1] - self.pos[1] < -10 and not('up' in collStat):
+                        speed = (2 * speed) **0.5
+                        self.movement[1] -= speed
+
+
+                    elif self.player_pos[1] - self.pos[1] > 10 and not('down' in collStat):
+                        speed = (2 * speed) **0.5
+                        self.movement[1] += speed                
+
+                    self.movement[0] += speed                
+                    self.facing_right = True
+
+
+                elif (self.player_pos[1] - self.pos[1] < -10) and not('up' in collStat):
+                    self.movement[1] -= speed
+
+
+                elif (self.player_pos[1] - self.pos[1] > 10) and not('down' in collStat):
+                    self.movement[1] += speed
+
+
+            elif (len(collStat) == 3 or notMoving) or self.escapeTime <= 500:
+                self.escapeTime += 1
+                if not('left' in collStat):
+                    #escapeDir = "left"
+                    self.movement[0] -= speed 
+                elif not('right' in collStat):
+                    #escapeDir = "right"
+                    self.movement[0] += speed
+                elif not('up' in collStat):
+                    #escapeDir = "up"
+                    self.movement[1] -= speed	
+                elif not('down' in collStat):
+                    #escapeDir = "down"
+                    self.movement[1] += speed
+
+            #elif (len(collStat)) == 2) or self.escapeTime <= 500:
+                #if ('left' in collStat and ('right' in collStat or 'up' in collStat):
+
+
+            elif self.state != 'attack' or self.state == 'moving':                
+                self.counter_a -= 1
+                if self.counter_a < 30:
+                    self.state = 'idle'
+                    self.frame_index = 0
+                    self.counter_a = 100
+
+
+            self.pos = [self.pos[0] + self.movement[0], self.pos[1] + self.movement[1]]                
+
+            # Reduce cooldown
+            if self.attack_cooldown > 0:
+                self.attack_cooldown -= 1
+
+    
+    
+    
+    
+    def hitbox(self):
+        #box[0] is left, 1 is right, 2 is top, 3 is bottom
+        self.Hitbox=[]
+        position = [self.adjusted_x, self.adjusted_y]
+        self.Hitbox.append((((position[0] - 15), (position[1] - 5)),((position[0] - 15), (position[1] + 50))))
+        self.Hitbox.append((((position[0] + 15), (position[1] - 5)),((position[0] + 15), (position[1] + 50))))
+        self.Hitbox.append((self.Hitbox[0][0], self.Hitbox[1][0]))
+        self.Hitbox.append((self.Hitbox[0][1], self.Hitbox[1][1]))
+        return self.Hitbox
+    
+    
+    
+    def update_animation(self, player): 
+        distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5    
+        if self.state == "dead":
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % DEAD_FRAME_COUNT
+                print(self.frame_index)
+                if self.frame_index == 0: 
+                    
+                    clear_dead(self.pos)
         
-        # Reduce cooldown
-        if self.attack_cooldown > 0:
-            self.attack_cooldown -= 1
-
-    def update_animation(self):
-        """Update frame index for animation."""
-        self.frame_timer += 1
-
-        if self.frame_timer >= FRAME_DELAY:
-            self.frame_timer = 0  # Reset frame timer
-
-            # If attacking, use attack animation frames
-            if self.attack:
+        if self.state == 'attack':
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame_timer = 0
                 self.frame_index = (self.frame_index + 1) % ATTACK_FRAME_COUNT
 
-                # If attack animation finishes, reset attack state
-                if self.frame_index == 0:
-                    self.attack = False  # Only reset attack after full animation
-                    self.is_attacking = False  # Ensure the enemy can attack again
-            else:
-                # If not attacking, use movement/idle animation
+                if self.frame_index == 0:                        
+                        self.check_hit(self.AP * player.DM)						                            
+                        self.state = 'idle'
+                        self.frame_index = 0
+
+        else:
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame_timer = 0
                 self.frame_index = (self.frame_index + 1) % FRAME_COUNT
 
 
     def draw(self, canvas, camera_x, camera_y):
         """Draw enemy sprite."""
-        if self.attack and self.facing_right:
+        if self.state == "dead" and self.facing_right:
+            sprite_image = ENEMY_DEATH_IMAGE
+            
+        elif self.state == "dead" and not self.facing_right:
+            sprite_image = ENEMY_DEATH_FLIPPED
+            
+        elif self.state == 'attack' and self.facing_right:
             sprite_image = ENEMY_ATTACK_IMAGE
-            self.attack_move(self)
-        elif self.attack and not self.facing_right:
+            
+        elif self.state == 'attack' and not self.facing_right:
             sprite_image = ENEMY_ATTACK_FLIPPED
-            self.attack_move(self)
+            
         else:
-            sprite_image = ENEMY_RUN_IMAGE if self.is_moving else ENEMY_IDLE_IMAGE
+            sprite_image = ENEMY_RUN_IMAGE if self.state == 'moving' else ENEMY_IDLE_IMAGE
             if not self.facing_right:
-                sprite_image = ENEMY_RUN_FLIPPED if self.is_moving else ENEMY_IDLE_FLIPPED
+                sprite_image = ENEMY_RUN_FLIPPED if self.state == 'moving' else ENEMY_IDLE_FLIPPED
 
+        
+        if self.state == "dead":
+            print(self.frame_index)
+        
         self.enemy_move(self.player)
+        hitbox = self.hitbox()
+        
+        
+        #for i in range(4):
+            #canvas.draw_line((self.Hitbox[i][0]), (self.Hitbox[i][1]), 2, 'Red')
+        
         frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
-
+        
+        
+        self.adjusted_x = self.pos[0] - camera_x 
+        self.adjusted_y = self.pos[1] - camera_y
+        
         canvas.draw_image(sprite_image, 
                           (frame_x, SPRITE_HEIGHT / 2), 
                           (SPRITE_WIDTH, SPRITE_HEIGHT), 
-                          (WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2) + self.movement[0],  
-                           HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2) + self.movement[1]), 
+                          (self.adjusted_x,  
+                           self.adjusted_y), 
                           DISPLAY_SIZE)
         
     def get_p(self):
@@ -360,9 +565,16 @@ class Backgrounds:
         Backgrounds.new_wall('Vertical', 375, 215, 350)
         Backgrounds.new_wall('Horizontal', 216, 75, 300) 
 
-    def check_collision(pos):
-        touchingWalls = []
+    
+    def check_collision(pos, hitbox, character):
+        collisionDir = []
+        prime_hitbox = hitbox
+        prime_rect = (prime_hitbox[0][0][0], prime_hitbox[2][0][1], prime_hitbox[1][0][0], prime_hitbox[3][0][1])
 
+        pHitbox = player.hitbox()
+        player_rect = (pHitbox[0][0][0], pHitbox[2][0][1], pHitbox[1][0][0], pHitbox[3][0][1])
+
+        # Check vertical walls
         # Check vertical walls
         for wall in verticalGrid:
             if wall[2] == 'Vertical':  # Check if the wall is impassable
@@ -372,13 +584,14 @@ class Backgrounds:
 
                 # Check if the player's new position overlaps with the wall
                 if (wall_x < pos[0] < wall_x + 15 and
-                    wall_y1 - 45 < pos[1] < wall_y2):               
-
-                    touchingWalls.append('left') # Collision detected
+                    wall_y1 - 45 < pos[1] < wall_y2) and not('left' in collisionDir):                               
+                    collisionDir.append('left') # Collision detected
 
                 if (wall_x - 15 < pos[0] < wall_x and
-                    wall_y1 - 45 < pos[1] < wall_y2):               
-                    touchingWalls.append('right')
+                    wall_y1 - 45 < pos[1] < wall_y2) and not('right' in collisionDir):               
+                    collisionDir.append('right')
+
+
 
         for wall in horizontalGrid:
             if wall[2] == 'Horizontal':  # Check if the wall is impassable
@@ -386,16 +599,67 @@ class Backgrounds:
                 wall_x1 = wall[0][0]  # x-coordinate of the left start point
                 wall_x2 = wall[1][0]  # x-coordinate of the right end point
 
-                # Check if the player's new position overlaps with the wall
-                if (wall_y  < pos[1] + 40 < wall_y + 10 and
-                    wall_x1 - 10 < pos[0] < wall_x2 + 10):
-                    touchingWalls.append('up')  # Collision detected
+                    # Check if the player's new position overlaps with the wall
+                if (wall_y <= pos[1] + 40 <= wall_y + 15 and                
+                    wall_x1 - 10 <= pos[0] <= wall_x2 + 10) and not('up' in collisionDir):
+                    collisionDir.append('up')  # Collision detected
+                    
+                        
 
-                if (wall_y - 10 < pos[1] +40 < wall_y and
-                    wall_x1 - 10 < pos[0] < wall_x2 + 10):
-                    touchingWalls.append('down')  # Collision detected
+                if (wall_y - 15 < pos[1] + 40 < wall_y and 
+                    wall_x1  - 10< pos[0] < wall_x2+10) and not('down' in collisionDir):
+                    collisionDir.append('down')  # Collision detected
 
-        return touchingWalls
+
+
+        if character == 'enemy':
+            for enemy in enemies:
+                if hitbox == enemy.hitbox():
+                    primeHitbox = enemy.hitbox()
+                    prime_rect = (primeHitbox[0][0][0], primeHitbox[2][0][1], primeHitbox[1][0][0], primeHitbox[3][0][1])
+
+            for enemy in enemies:
+                if hitbox != enemy.hitbox():
+                    eHitbox = enemy.hitbox()
+                    enemy_rect = (eHitbox[0][0][0], eHitbox[2][0][1], eHitbox[1][0][0], eHitbox[3][0][1]) 
+                    #Checks collision of prime on right side of enemies and player
+                    if ((prime_rect[2] >= enemy_rect[0] and prime_rect[0] < enemy_rect[0] and \
+                       prime_rect[3] > enemy_rect[1]  and prime_rect[1] < enemy_rect[3]) or \
+                       (prime_rect[2] >= player_rect[0] and prime_rect[0] < player_rect[0] and \
+                       prime_rect[3] > player_rect[1]  and prime_rect[1] < player_rect[3])) and not('right' in collisionDir):
+                        collisionDir.append('right')  
+
+                    # Check for collision on the left side of the prime and the right side of the enemy
+                    if ((prime_rect[0]  <= enemy_rect[2] and prime_rect[2] > enemy_rect[2] and \
+                       prime_rect[3] > enemy_rect[1] and prime_rect[1] < enemy_rect[3]) or \
+                       (prime_rect[0]  <= player_rect[2] and prime_rect[2] > player_rect[2] and \
+                       prime_rect[3] > player_rect[1] and prime_rect[1] < player_rect[3])) and not('left' in collisionDir):
+                        collisionDir.append('left')
+
+                    # Check for collision on the bottom side of the prime and the top side of the enemy
+                    if ((prime_rect[3] >= enemy_rect[1] and prime_rect[1] < enemy_rect[1] and \
+                       prime_rect[2] > enemy_rect[0] and prime_rect[0]  < enemy_rect[2]) or \
+                       (prime_rect[3] >= player_rect[1] and prime_rect[1] < player_rect[1] and \
+                       prime_rect[2] > player_rect[0] and prime_rect[0]  < player_rect[2])) and not('down' in collisionDir):
+                        collisionDir.append('down')
+
+                    # Check for collision on the top side of the prime and the bottom side of the enemy
+                    if ((prime_rect[1] <= enemy_rect[3] and prime_rect[3] > enemy_rect[3] and \
+                       prime_rect[2] > enemy_rect[0] and prime_rect[0]  < enemy_rect[2]) or \
+                       (prime_rect[1] <= player_rect[3] and prime_rect[3] > player_rect[3] and \
+                       prime_rect[2] > player_rect[0] and prime_rect[0]  < player_rect[2])) and not('up' in collisionDir):
+                        collisionDir.append('up')  
+
+
+
+
+
+
+
+
+
+
+        return collisionDir
     
 class Keys:
     def keydown(key):
@@ -426,12 +690,18 @@ class Keys:
 
 class Update:  
     def update():
+        global SCORE
         """Update player movement and animation."""
         player.move()
         player.update_animation()
         for enemy in enemies:    
-            enemy.update_animation()
-
+            enemy.update_animation(player)
+            if enemy.state == "dead" and enemy.frame_index == 0:
+                enemies.remove(enemy)
+                SCORE += 10
+                
+                
+            
     def draw(canvas):
         """Draw game scene."""
         Update.update()
@@ -469,12 +739,21 @@ class Update:
         canvas.draw_image(image,
             (img_width / 2, img_height / 2),  # Image center
             (img_width, img_height),  # Original size
-            (
-                WIDTH / 2 - (camera_x - (img_width - WIDTH) / 2),
-                HEIGHT / 2 - (camera_y - (img_height - HEIGHT) / 2)
-            ),
+            (WIDTH / 2 - (camera_x - (img_width - WIDTH) / 2),
+             HEIGHT / 2 - (camera_y - (img_height - HEIGHT) / 2)),
             (img_width * scale, img_height * scale)  # Scale image
         )
+        #if LIVES == 3:
+            #canvas.draw_image(LIVES_IMAGE, (16.5, 5.5),(33, 77), (16.5, 5.5),(33, 77)) 
+        #elif LIVES == 2:
+            #canvas.draw_image(LIVES_IMAGE, (16.5, 38.5),(33, 77), (16.5, 5.5),(16.5, 11))
+        #elif LIVES == 1:
+            #canvas.draw_image(LIVES_IMAGE, (16.5, 38.5),(33, 77), (16.5, 5.5),(16.5, 11))
+        #else:
+            #pass
+        
+        canvas.draw_text(f"Lives: {LIVES}", (10, 20), 20, "White")
+        canvas.draw_text(f"Score: {SCORE}", (30, 40), 20, "White")
 
         # Check if assets are still loading
         if BACKGROUND.get_width() <= 0 or BACKGROUND.get_height() <= 0:
@@ -530,7 +809,8 @@ def check_collision(pos):
 
 def initialize_game():
     global player, enemies
-    
+    global SCORE
+    SCORE = 0
     # Initialize player
     player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SPEED, 100, "Player 1", 15, 1)
     camera_x = player.pos[0] - WIDTH // 2
@@ -540,12 +820,12 @@ def initialize_game():
     enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
                    HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
     enemies = []
-    amount_of_enemies = 10
+    amount_of_enemies = 3
 
     # Spawns enemies randomly around the map
     for i in range(amount_of_enemies):
-        x_variation = random.randint(-500, 500)
-        y_variation = random.randint(-300, 500)
+        x_variation = random.randint(-100, 100)
+        y_variation = random.randint(-100, 100)
         enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
         enemies.append(enemy)
 
@@ -553,12 +833,26 @@ def initialize_game():
     Backgrounds.create_grid()
     Backgrounds.create_walls()
     
+def clear_dead(pos):
+    #for prime in enemies:
+        #if pos == prime.get_p():
+            #enemies.remove(prime)
+    print("dead clear")
+    
 def game_reset():
     global DEATH_SCREEN
+    global LIVES
+    global SCORE
+    global HIGH_SCORE
     frame.set_draw_handler(Welcome.draw)
     frame.set_mouseclick_handler(Welcome.welcome_click)
     DEATH_SCREEN = True
+    LIVES = 3
+    if SCORE >= HIGH_SCORE:	
+        HIGH_SCORE = SCORE
+    
     enemies.clear()
+    
 
 # Create the game frame
 frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)

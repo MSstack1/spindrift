@@ -6,6 +6,7 @@ WIDTH = 500
 HEIGHT = 500
 PLAYER_SPEED = 5
 FRAME_COUNT = 6
+NPC_FRAME_COUNT = 5
 ATTACK_FRAME_COUNT = 5
 PLAYER_HURT_FRAME_COUNT = 3
 DEAD_FRAME_COUNT = 4
@@ -22,11 +23,12 @@ HIGH_SCORE = 0
 WELCOME_SCREEN = simplegui.load_image("https://i.imgur.com/Zhl2jMw.jpeg")
 START_BUTTON = simplegui.load_image("https://i.imgur.com/MqgJtv8.png")
 WASTED = simplegui.load_image("https://i.imgur.com/pFupxi8.png")
-BACKGROUND = simplegui.load_image("https://i.imgur.com/DudAEjc.png")
+BACKGROUND = simplegui.load_image("https://i.imgur.com/oHrKyJ2.png")
 BKG_2 = simplegui.load_image("https://i.imgur.com/O671jzf.jpeg")
 BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
 
 # Loading sprites and animations (player and enemy)
+NPC_IMAGE = simplegui.load_image("https://i.imgur.com/wU60Hb7.png")
 IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/Xq9mtbz.png")
 RUN_IMAGE = simplegui.load_image("https://i.imgur.com/NAhLOeo.png")
 HURT_IMAGE = simplegui.load_image("https://i.imgur.com/01pyiDj.png")
@@ -87,6 +89,34 @@ class Welcome:
                               (WIDTH/ 2, HEIGHT /hight_mod), (size_x, size_y))
 
 
+class NPC:
+    def __init__(self, pos):	
+        self.pos = pos
+        self.frame_timer = 0
+        self.frame_index = 0
+        
+        
+                 
+    def update_animation(self):
+        self.frame_timer += 1
+        if self.frame_timer >= 10:
+            self.frame_timer = 0
+            self.frame_index = (self.frame_index + 1) % NPC_FRAME_COUNT
+            
+    def draw(self, canvas, camera_x, camera_y):
+        sprite_image = NPC_IMAGE
+        frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
+        adjusted_x = self.pos[0] - camera_x 
+        adjusted_y = self.pos[1] - camera_y
+        
+        canvas.draw_image(sprite_image, 
+                          (frame_x, SPRITE_HEIGHT / 2), 
+                          (SPRITE_WIDTH, SPRITE_HEIGHT), 
+                          (adjusted_x,  
+                           adjusted_y), 
+                          DISPLAY_SIZE)
+        
+            
 class Player:
     def __init__(self, x, y, speed, health, name, AP, DM):
         self.pos = [x, y]
@@ -184,7 +214,7 @@ class Player:
             self.health = max(self.health, 0)
             if self.health <= 0:
                 LIVES -= 1
-                self.pos = [562,67]
+                self.pos = [743,254]
                 self.health = 100
                 if LIVES <= 0:
                     game_reset()
@@ -244,6 +274,7 @@ class Player:
                           (SPRITE_WIDTH, SPRITE_HEIGHT), 
                           (WIDTH // 2, HEIGHT // 2), 
                           DISPLAY_SIZE)
+        
         
         # Draw Health Bar
         bar_width = 50
@@ -694,6 +725,8 @@ class Update:
         """Update player movement and animation."""
         player.move()
         player.update_animation()
+        for NPC in NPCs:
+            NPC.update_animation()
         for enemy in enemies:    
             enemy.update_animation(player)
             if enemy.state == "dead" and enemy.frame_index == 0:
@@ -725,7 +758,10 @@ class Update:
         # Draw enemies
         for enemy in enemies:
             enemy.draw(canvas, camera_x, camera_y)
-
+        
+        for NPC in NPCs:
+            NPC.draw(canvas, camera_x, camera_y)
+            
     def draw_image(canvas, image, camera_x, camera_y, scale=1):
         """Draw an image with the given parameters."""
 
@@ -808,11 +844,13 @@ def check_collision(pos):
     return touchingWalls
 
 def initialize_game():
-    global player, enemies
+    global player, enemies, NPCs
     global SCORE
     SCORE = 0
     # Initialize player
-    player = Player(WIDTH // 2, HEIGHT // 2, PLAYER_SPEED, 100, "Player 1", 15, 1)
+    NPCs = []
+    NPCs.append(NPC([865,745]))
+    player = Player(743, 254, PLAYER_SPEED, 100, "Player 1", 15, 1)
     camera_x = player.pos[0] - WIDTH // 2
     camera_y = player.pos[1] - HEIGHT // 2 
 
@@ -824,8 +862,8 @@ def initialize_game():
 
     # Spawns enemies randomly around the map
     for i in range(amount_of_enemies):
-        x_variation = random.randint(-100, 100)
-        y_variation = random.randint(-100, 100)
+        x_variation = random.randint(220, 1180)
+        y_variation = random.randint(360, 750)
         enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
         enemies.append(enemy)
 

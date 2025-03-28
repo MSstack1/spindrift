@@ -18,6 +18,7 @@ DEATH_SCREEN = False
 LIVES = 3
 SCORE = 0
 HIGH_SCORE = 0
+WAVE = 0
 
 # Loading backgrounds and sounds
 WELCOME_SCREEN = simplegui.load_image("https://i.imgur.com/Zhl2jMw.jpeg")
@@ -106,7 +107,9 @@ class NPC:
             "HELP ME!",
             "Hello sir! Please may you clean my garden!",
             "There's tons of skeletons! I hate skeletons!!",
-            "For every one you 'clean-up' I'll pay you 10 gold!"
+            "For every one you 'clean-up' I'll pay you 10 gold!",
+            "I think theres some on the otherside of the garden!",
+            "Have a go at 'cleaning them up'"
         ]
         self.message_index = 0
         self.frame_counter = 0
@@ -209,7 +212,7 @@ class Player:
             self.is_moving = True
         
         elif self.keys["j"] and self.attack_cooldown == 0:
-            self.attack_cooldown = 50
+            self.attack_cooldown = 35
             self.attack_move()
         
         if (self.keys["a"] or self.keys["d"]) and (self.keys["w"] or self.keys["s"]):
@@ -277,7 +280,7 @@ class Player:
             if distance <= attack_range:
                 # If there's a hit, apply damage to the enemy
                 enemy.take_damage(self.AP) 
-                print(f"Hit {enemy.name} for {self.AP} damage!")  # Debugging line
+                #print(f"Hit {enemy.name} for {self.AP} damage!")  # Debugging line
                 break     
     
     
@@ -776,6 +779,9 @@ class Update:
             if enemy.state == "dead" and enemy.frame_index == 0:
                 enemies.remove(enemy)
                 SCORE += 10
+        #print (enemies)
+        if enemies == []:
+            new_wave()
                 
                 
             
@@ -833,7 +839,8 @@ class Update:
             #pass
         
         canvas.draw_text(f"Lives: {LIVES}", (10, 20), 20, "White")
-        canvas.draw_text(f"Score: {SCORE}", (220, 20), 20, "White")
+        canvas.draw_text(f"Score: {SCORE}", (220, 40), 20, "White")
+        canvas.draw_text(f"Wave: {WAVE}", (220, 20), 20, "White")
 
         # Check if assets are still loading
         if BACKGROUND.get_width() <= 0 or BACKGROUND.get_height() <= 0:
@@ -887,10 +894,28 @@ def check_collision(pos):
     
     return touchingWalls
 
+def new_wave():
+    #print("new wave")
+    global player, enemies, WAVE
+    WAVE += 1
+    camera_x = player.pos[0] - WIDTH // 2
+    camera_y = player.pos[1] - HEIGHT // 2 
+    enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
+                   HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
+    enemies = []
+    amount_of_enemies = 3 * WAVE
+
+    # Spawns enemies randomly around the map
+    for i in range(amount_of_enemies):
+        x_variation = random.randint(100, 300) #CHANGE FOR WHERE YOU WANT ENEMIES TO SPAWN
+        y_variation = random.randint(0, 100)
+        enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+        enemies.append(enemy)
+        
 def initialize_game():
-    global player, enemies, NPCs
-    global SCORE
+    global player, enemies, NPCs, WAVE, SCORE
     SCORE = 0
+    WAVE = 0
     # Initialize player
     NPCs = []
     NPCs.append(NPC([865,745]))
@@ -906,8 +931,8 @@ def initialize_game():
 
     # Spawns enemies randomly around the map
     for i in range(amount_of_enemies):
-        x_variation = random.randint(220, 1180)
-        y_variation = random.randint(360, 750)
+        x_variation = random.randint(100, 300)
+        y_variation = random.randint(0, 100)
         enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
         enemies.append(enemy)
 

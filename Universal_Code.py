@@ -23,6 +23,7 @@ HIGH_SCORE = 0
 WELCOME_SCREEN = simplegui.load_image("https://i.imgur.com/Zhl2jMw.jpeg")
 START_BUTTON = simplegui.load_image("https://i.imgur.com/MqgJtv8.png")
 WASTED = simplegui.load_image("https://i.imgur.com/pFupxi8.png")
+SPEECH = simplegui.load_image("https://i.imgur.com/RHrJ2RA.png")
 BACKGROUND = simplegui.load_image("https://i.imgur.com/oHrKyJ2.png")
 BKG_2 = simplegui.load_image("https://i.imgur.com/O671jzf.jpeg")
 BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
@@ -60,11 +61,17 @@ class Welcome:
         global HIGH_SCORE
         Welcome.draw_image(canvas, WELCOME_SCREEN, WIDTH, HEIGHT, 2)
         canvas.draw_text(f"High Score: {HIGH_SCORE}", (10, 20), 20, "White")
+        canvas.draw_text("CONTROLS", (10, 100), 20, "White")
+        canvas.draw_text("W - UP", (10, 120), 20, "White")
+        canvas.draw_text("A - LEFT", (10, 140), 20, "White")
+        canvas.draw_text("S - DOWN", (10, 160), 20, "White")
+        canvas.draw_text("D - RIGHT", (10, 180), 20, "White")
+        canvas.draw_text("J - ATTACK", (10, 200), 20, "White")
         Welcome.draw_image(canvas, START_BUTTON, 80, 40, 1.25)
         
         if DEATH_SCREEN:
             Welcome.draw_image(canvas, WASTED, 250, 100, 2)
-            canvas.draw_text(f"Score last game: {SCORE}", (30, 40), 20, "White")
+            canvas.draw_text(f"Score last game: {SCORE}", (10, 40), 20, "White")
         
     def welcome_click(pos):
         if ((WIDTH/2 - 40 <= pos[0] <= WIDTH/2 + 40) and (HEIGHT/1.25 - 20 <= pos[1] <= HEIGHT/1.25 + 20)):
@@ -94,6 +101,16 @@ class NPC:
         self.pos = pos
         self.frame_timer = 0
         self.frame_index = 0
+        self.display_message = False
+        self.messages = [
+            "HELP ME!",
+            "Hello sir! Please may you clean my garden!",
+            "There's tons of skeletons! I hate skeletons!!",
+            "For every one you 'clean-up' I'll pay you 10 gold!"
+        ]
+        self.message_index = 0
+        self.frame_counter = 0
+        self.frame_delay = 180 
         
         
                  
@@ -102,6 +119,9 @@ class NPC:
         if self.frame_timer >= 10:
             self.frame_timer = 0
             self.frame_index = (self.frame_index + 1) % NPC_FRAME_COUNT
+            
+            
+            
             
     def draw(self, canvas, camera_x, camera_y):
         sprite_image = NPC_IMAGE
@@ -116,6 +136,30 @@ class NPC:
                            adjusted_y), 
                           DISPLAY_SIZE)
         
+        distance = ((self.pos[0] - player.pos[0]) ** 2 + (self.pos[1] - player.pos[1]) ** 2) ** 0.5
+
+        if distance < 100:
+            self.display_message = True
+        else:
+            self.display_message = False
+            self.message_index = 0  # Reset message when player moves away
+            self.frame_counter = 0  # Reset frame count 
+            
+        if self.display_message:
+            text_x = adjusted_x - 30
+            text_y = adjusted_y - 20
+
+            # Draw the current message
+            canvas.draw_text(self.messages[self.message_index], (text_x, text_y), 14, "White")
+
+            # Increase frame counter
+            self.frame_counter += 1
+
+            # Change message when delay is reached
+            if self.frame_counter >= self.frame_delay:
+                self.frame_counter = 0  # Reset counter
+                if self.message_index < len(self.messages) - 1:
+                    self.message_index += 1
             
 class Player:
     def __init__(self, x, y, speed, health, name, AP, DM):
@@ -789,7 +833,7 @@ class Update:
             #pass
         
         canvas.draw_text(f"Lives: {LIVES}", (10, 20), 20, "White")
-        canvas.draw_text(f"Score: {SCORE}", (30, 40), 20, "White")
+        canvas.draw_text(f"Score: {SCORE}", (220, 20), 20, "White")
 
         # Check if assets are still loading
         if BACKGROUND.get_width() <= 0 or BACKGROUND.get_height() <= 0:

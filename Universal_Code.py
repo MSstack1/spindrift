@@ -516,9 +516,6 @@ class Enemy:
                 self.attack_cooldown -= 1
 
     
-    
-    
-    
     def hitbox(self):
         #box[0] is left, 1 is right, 2 is top, 3 is bottom
         self.Hitbox=[]
@@ -607,6 +604,114 @@ class Enemy:
     def get_p(self):
         return self.pos
        
+        
+class Vector:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def add(self, other):
+        self.x += other.x
+        self.y += other.y
+    
+    def negate_x(self):
+        self.x = -self.x
+    
+    def negate_y(self):
+        self.y = -self.y
+        
+        
+class bouncingObject:
+    def __init__(self, pos, vel, radius, bounce_limit):
+        self.pos = Vector(pos[0], pos[1])
+        self.vel = Vector(vel[0], vel[1])
+        self.radius = radius
+        self.bounce_limit = bounce_limit
+        self.bounces = 0
+        self.active = True
+        
+    def update(self):
+        self.pos.add(self.vel)
+        
+        
+        if self.bounces >= self.bounce_limit:
+            self.active = False
+        
+    def draw(self, canvas, camera_x, camera_y):
+        if self.active:
+            #for i in range(4):
+                #canvas.draw_line((self.Hitbox[i][0]), (self.Hitbox[i][1]), 2, 'Red')
+        
+            
+            canvas.draw_circle((self.pos.x - camera_x, self.pos.y - camera_y), self.radius, 2, "White", "Blue")
+        
+               
+class RangedEnemy:
+    def __init__(self, x, y, speed, health, name, AP, DM, player, xVar, yVar):
+        self.adjusted_x = 0
+        self.adjusted_y = 0        
+        self.player_pos = player.get_p()
+        self.player = player
+        self.pos = [x + xVar, y + yVar]      
+        self.movement = [0 + xVar, 0 + yVar]
+        self.state = 'idle'
+        self.facing_right = True
+        self.OGspeed = speed
+        self.frame_index = 0
+        self.frame_timer = 0
+        self.health = health
+        self.max_enemy_health = health
+        self.name = name
+        self.AP = AP
+        self.DM = DM
+        self.attack = False
+        self.attack_cooldown = 0  # Cooldown timer
+        self.attack_delay = 180  # Frames before enemy can attack again
+        self.counter_a = 3
+        self.counter_b = 5
+        self.notMoving = True
+        self.escapeTime = 501
+        
+    def range_check(self, player):
+        distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5    
+        direction = [self.player_pos[0] - self.pos[0], self.player_pos[1] - self.pos[1]]
+        if direction[0] < 0:
+            direction[0] = -2.5
+        else:
+            direction[0] = 2.5
+        if direction[1] < 0:
+            direction[1] = -2.5
+        else:
+            direction[1] = 2.5
+            
+       
+        if (distance < 200 and self.attack_cooldown == 0):
+            fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 10)
+            bouncing_objects.append(fireball)
+            self.attack_cooldown = 180
+        
+        
+    
+    def draw(self, canvas, camera_x, camera_y):
+        self.range_check(player)
+        
+        sprite_image = IDLE_IMAGE
+        frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
+        
+        self.adjusted_x = self.pos[0] - camera_x 
+        self.adjusted_y = self.pos[1] - camera_y
+        
+        canvas.draw_image(sprite_image, 
+                          (frame_x, SPRITE_HEIGHT / 2), 
+                          (SPRITE_WIDTH, SPRITE_HEIGHT), 
+                          (self.adjusted_x,  
+                           self.adjusted_y), 
+                          DISPLAY_SIZE)
+        
+        
+        
+        
+        
 verticalGrid = []
 horizontalGrid = []    
     
@@ -811,7 +916,15 @@ class Update:
         
         for NPC in NPCs:
             NPC.draw(canvas, camera_x, camera_y)
-            
+        
+        for ranged_enemy in ranged_enemies:
+            ranged_enemy.draw(canvas, camera_x, camera_y)
+        
+        for fireball in bouncing_objects:
+            fireball.draw(canvas, camera_x, camera_y)
+            fireball.update()
+    
+    
     def draw_image(canvas, image, camera_x, camera_y, scale=1):
         """Draw an image with the given parameters."""
 
@@ -913,7 +1026,7 @@ def new_wave():
         enemies.append(enemy)
         
 def initialize_game():
-    global player, enemies, NPCs, WAVE, SCORE
+    global player, enemies, ranged_enemies, bouncing_objects,NPCs, WAVE, SCORE
     SCORE = 0
     WAVE = 0
     # Initialize player
@@ -928,7 +1041,18 @@ def initialize_game():
                    HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
     enemies = []
     amount_of_enemies = 3
-
+    
+    ranged_enemies = []
+    amount_of_ranged = 1
+    
+    bouncing_objects = []
+    
+    for i in range(amount_of_ranged):
+        x_variation = random.randint(100, 300)
+        y_variation = random.randint(0, 100)
+        enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+        ranged_enemies.append(enemy)
+        
     # Spawns enemies randomly around the map
     for i in range(amount_of_enemies):
         x_variation = random.randint(100, 300)

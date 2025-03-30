@@ -705,19 +705,13 @@ class RangedEnemy:
         self.notMoving = True
         self.escapeTime = 501
         
-    def range_check(self, player):
+    def range_check(self, player):  
         distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5    
         direction = [self.player_pos[0] - self.pos[0], self.player_pos[1] - self.pos[1]]
-        if direction[0] < 0:
-            direction[0] = -2.5
-        else:
-            direction[0] = 2.5
-        if direction[1] < 0:
-            direction[1] = -2.5
-        else:
-            direction[1] = 2.5
-            
-            
+        magnitude = (direction[0]**2 + direction[1]**2) ** 0.5
+        if magnitude != 0:  # Avoid division by zero
+            direction[0] = (direction[0] / magnitude) * 2.5
+            direction[1] = (direction[1] / magnitude) * 2.5    
        
         if (distance < 200 and self.attack_cooldown <= 0):
             fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 10)

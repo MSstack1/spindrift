@@ -1,5 +1,6 @@
 import simplegui
 import random
+import math
 
 # Constants
 WIDTH = 500
@@ -39,6 +40,7 @@ ENEMY_IDLE_IMAGE = simplegui.load_image("https://i.imgur.com/atp0eco.png")
 ENEMY_RUN_IMAGE = simplegui.load_image("https://i.imgur.com/QomI2XQ.png")
 ENEMY_ATTACK_IMAGE = simplegui.load_image("https://i.imgur.com/eJ7dTBA.png")
 ENEMY_DEATH_IMAGE = simplegui.load_image("https://i.imgur.com/mPEEU4v.png")
+FIREBALL_WRIGHT = simplegui.load_image("https://i.imgur.com/gPDsxrc.png")
 # Loading animations
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
@@ -628,23 +630,54 @@ class bouncingObject:
         self.radius = radius
         self.bounce_limit = bounce_limit
         self.bounces = 0
-        self.active = True
+        
+        self.sprite_width = 154
+        self.sprite_height = 154
+        self.num_frames = 5
+        self.current_frame = 0
+        self.animation_speed = 5
+        self.frame_counter = 0
+        self.scale = 0.5
+        
+        
         
     def update(self):
         self.pos.add(self.vel)
         
         
+        global bouncing_objects
         if self.bounces >= self.bounce_limit:
-            self.active = False
+            bouncing_objects.remove(self)
+            
+        self.frame_counter += 1
+        if self.frame_counter >= self.animation_speed:
+            self.current_frame = (self.current_frame + 1) % self.num_frames
+            self.frame_counter = 0
         
     def draw(self, canvas, camera_x, camera_y):
-        if self.active:
             #for i in range(4):
                 #canvas.draw_line((self.Hitbox[i][0]), (self.Hitbox[i][1]), 2, 'Red')
         
             
-            canvas.draw_circle((self.pos.x - camera_x, self.pos.y - camera_y), self.radius, 2, "White", "Blue")
+            self.drawSprite(canvas, camera_x, camera_y)
+            
+    def drawSprite(self, canvas, camera_x, camera_y):
+        """Draws the fireball using the sprite sheet."""
+        frame_x = self.current_frame * self.sprite_width
         
+        scaled_width = self.sprite_width * self.scale
+        scaled_height = self.sprite_height * self.scale
+        
+        angle = math.atan2(self.vel.y, self.vel.x)
+        
+        canvas.draw_image(
+            FIREBALL_WRIGHT,
+            (frame_x + self.sprite_width // 2, self.sprite_height // 2), 
+            (self.sprite_width, self.sprite_height), 
+            (self.pos.x - camera_x, self.pos.y - camera_y),  
+            (scaled_width, scaled_height),
+            angle
+        )
                
 class RangedEnemy:
     def __init__(self, x, y, speed, health, name, AP, DM, player, xVar, yVar):
@@ -684,11 +717,14 @@ class RangedEnemy:
         else:
             direction[1] = 2.5
             
+            
        
-        if (distance < 200 and self.attack_cooldown == 0):
+        if (distance < 200 and self.attack_cooldown <= 0):
             fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 10)
             bouncing_objects.append(fireball)
-            self.attack_cooldown = 180
+            self.attack_cooldown = 270
+            
+        self.attack_cooldown -= 1
         
         
     

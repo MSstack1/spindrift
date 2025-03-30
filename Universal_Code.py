@@ -272,6 +272,7 @@ class Player:
     def attack_move(self):
         print (self.pos)
         self.attack = True
+        self.frame_index = 0
         attack_range = 50  # Define the attack range       
         
         for enemy in enemies:
@@ -287,17 +288,16 @@ class Player:
     
     
     def hitbox(self):
-        #box[0] is left, 1 is right, 2 is top, 3 is bottom
         self.Hitbox=[]
         position = self.pos
-        self.Hitbox.append((((WIDTH // 2 - 15), (HEIGHT // 2  - 5)),((WIDTH // 2 - 15), (HEIGHT // 2 + 50))))
-        self.Hitbox.append((((WIDTH // 2 + 15), (HEIGHT // 2 - 5)),((WIDTH // 2 + 15), (HEIGHT // 2 + 50))))
+        self.Hitbox=[]
+        self.Hitbox.append((((position[0] - 15), (position[1] - 5)),((position[0] - 15), (position[1] + 50))))
+        self.Hitbox.append((((position[0] + 15), (position[1] - 5)),((position[0] + 15), (position[1] + 50))))
         self.Hitbox.append((self.Hitbox[0][0], self.Hitbox[1][0]))
         self.Hitbox.append((self.Hitbox[0][1], self.Hitbox[1][1]))
-        
-        
-        
-        return self.Hitbox
+        rect = [self.Hitbox[0][0][0], self.Hitbox[2][0][1], self.Hitbox[1][0][0], self.Hitbox[3][0][1]]
+
+        return rect
     
     def draw(self, canvas, camera_x, camera_y):
         """Draw player sprite."""
@@ -377,10 +377,8 @@ class Enemy:
     
     def check_hit(self, player):
         
-        pHitbox = self.player.hitbox()
-        eHitbox = self.hitbox()
-        enemy_rect = (eHitbox[0][0][0], eHitbox[2][0][1], eHitbox[1][0][0], eHitbox[3][0][1])
-        player_rect = (pHitbox[0][0][0], pHitbox[2][0][1], pHitbox[1][0][0], pHitbox[3][0][1]) 
+        enemy_rect = self.hitbox()
+        player_rect = self.player.hitbox()
         
         if ((enemy_rect[2] > player_rect[0] and enemy_rect[0] < player_rect[0] and enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3]) or \                                                         
             (enemy_rect[0]  <= player_rect[2] and enemy_rect[2] > player_rect[2] and 
@@ -484,7 +482,7 @@ class Enemy:
                     self.movement[1] += speed
 
 
-            elif (len(collStat) == 3 or notMoving) or self.escapeTime <= 500:
+            elif (len(collStat) == 3 or notMoving) or self.escapeTime <= 500 and self.state != "attack":
                 self.escapeTime += 1
                 if not('left' in collStat):
                     #escapeDir = "left"
@@ -526,8 +524,9 @@ class Enemy:
         self.Hitbox.append((((position[0] + 15), (position[1] - 5)),((position[0] + 15), (position[1] + 50))))
         self.Hitbox.append((self.Hitbox[0][0], self.Hitbox[1][0]))
         self.Hitbox.append((self.Hitbox[0][1], self.Hitbox[1][1]))
-        return self.Hitbox
-    
+        rect = [self.Hitbox[0][0][0], self.Hitbox[2][0][1], self.Hitbox[1][0][0], self.Hitbox[3][0][1]]
+
+        return rect
     
     
     def update_animation(self, player): 
@@ -630,7 +629,7 @@ class bouncingObject:
         self.radius = radius
         self.bounce_limit = bounce_limit
         self.bounces = 0
-        
+        self.hit = False
         self.sprite_width = 154
         self.sprite_height = 154
         self.num_frames = 5
@@ -638,12 +637,35 @@ class bouncingObject:
         self.animation_speed = 5
         self.frame_counter = 0
         self.scale = 0.5
+        self.Hitbox = self.hitbox()
+        self.player = player
+    
+    def hitbox(self):
+   
+        left = self.pos.x - self.radius - 5
+        right = self.pos.x + self.radius + 5
+        top = self.pos.y - self.radius - 5
+        bottom = self.pos.y + self.radius + 5
         
+        return [left, top, right, bottom]
+    
+    def check_hit(self):
         
+        enemy_rect = self.hitbox()
+        player_rect = self.player.hitbox()
         
+        if ((enemy_rect[2] > player_rect[0] and enemy_rect[0] < player_rect[0] and enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3]) or \                                                         
+            (enemy_rect[0]  <= player_rect[2] and enemy_rect[2] > player_rect[2] and 
+            enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3])):
+              
+            self.hit = True
+            player.take_damage(15)
+            
+            
+            
     def update(self):
         self.pos.add(self.vel)
-        
+        self.check_hit()
         
         global bouncing_objects
         if self.bounces >= self.bounce_limit:
@@ -654,15 +676,17 @@ class bouncingObject:
             self.current_frame = (self.current_frame + 1) % self.num_frames
             self.frame_counter = 0
         
-    def draw(self, canvas, camera_x, camera_y):
-            #for i in range(4):
-                #canvas.draw_line((self.Hitbox[i][0]), (self.Hitbox[i][1]), 2, 'Red')
-        
-            
-            self.drawSprite(canvas, camera_x, camera_y)
+    
             
     def drawSprite(self, canvas, camera_x, camera_y):
         """Draws the fireball using the sprite sheet."""
+        
+        hitbox = self.hitbox()
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
+        canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
+        
         frame_x = self.current_frame * self.sprite_width
         
         scaled_width = self.sprite_width * self.scale
@@ -676,8 +700,7 @@ class bouncingObject:
             (self.sprite_width, self.sprite_height), 
             (self.pos.x - camera_x, self.pos.y - camera_y),  
             (scaled_width, scaled_height),
-            angle
-        )
+            angle)
                
 class RangedEnemy:
     def __init__(self, x, y, speed, health, name, AP, DM, player, xVar, yVar):
@@ -747,46 +770,90 @@ horizontalGrid = []
     
 class Backgrounds:    
     def create_grid():
-        for x in range(14):
-            for y in range(9):
-                p1 = (x * BACKGROUND_WIDTH/13, y * BACKGROUND_HEIGHT/9)
-                p2 = (x * BACKGROUND_WIDTH/13, (y + 1) * BACKGROUND_HEIGHT/9)
+        for x in range(19):
+            for y in range(22):
+                p1 = (x * BACKGROUND_WIDTH/19, y * BACKGROUND_HEIGHT/22)
+                p2 = (x * BACKGROUND_WIDTH/19, (y + 1) * BACKGROUND_HEIGHT/22)
                 verticalGrid.append((p1,p2, 0))
 
-        for x in range(10):
-            for y in range(13):
-                p1 = (0 + y * (BACKGROUND_WIDTH/13), x * BACKGROUND_HEIGHT/9)
-                p2 = (0 + ((y + 1) * BACKGROUND_WIDTH/13), x * BACKGROUND_HEIGHT/9)            
+        for x in range(23):
+            for y in range(20):
+                p1 = (0 + y * (BACKGROUND_WIDTH/19), x * BACKGROUND_HEIGHT/22)
+                p2 = (0 + ((y + 1) * BACKGROUND_WIDTH/19), x * BACKGROUND_HEIGHT/22)            
                 horizontalGrid.append((p1,p2, 0))
 
+        for x in verticalGrid:
+            print(x)
+        
+        for x in range(10):
+            print()
+        
+        for x in horizontalGrid:
+            print(x)
+    
+    
+    
     def new_wall(side, constant, beginning, end):
         if side == 'Vertical':
             for x in range(len(verticalGrid)):
-                if ((verticalGrid[x][0][0] == constant) and (beginning <= verticalGrid[x][0][1] <= end)):
+                if ((constant - 5 <= verticalGrid[x][0][0] <= constant + 5) and (beginning-5 <= verticalGrid[x][0][1] <= end +5)):
                     verticalGrid[x] = (verticalGrid[x][0], verticalGrid[x][1], side)                
-
+                    print(verticalGrid[x], "SUCCESS")
+                    
         elif side == 'Horizontal':
             for x in range(len(horizontalGrid)):
                 if ((constant - 1 < horizontalGrid[x][0][1] < constant + 1) and (beginning <= horizontalGrid[x][0][0] <= end)):
                     horizontalGrid[x] = (horizontalGrid[x][0], horizontalGrid[x][1], side)
-
+                    print(horizontalGrid[x], "SUCCESS")
         else:
             print("Incorrect format for side:", side, " constant:", constant, " beginning:", beginning, " end:", end)
 
     def create_walls():
-        Backgrounds.new_wall('Vertical', 75, 216, 362)
-        Backgrounds.new_wall('Vertical', 375, 215, 350)
-        Backgrounds.new_wall('Horizontal', 216, 75, 300) 
-
-    
+        print("TRY")
+        Backgrounds.new_wall('Vertical', 202, 480, 610)
+        Backgrounds.new_wall('Horizontal', 654, 202, 404)
+        Backgrounds.new_wall('Vertical', 404, 654, 785)
+        Backgrounds.new_wall('Horizontal', 785, 404, 875)
+        
+        Backgrounds.new_wall('Vertical', 875, 785, 872)
+        Backgrounds.new_wall('Horizontal', 872, 875, 1010)
+        Backgrounds.new_wall('Vertical', 1010, 785, 872)
+        Backgrounds.new_wall('Horizontal', 785, 1010, 1077)
+        
+        Backgrounds.new_wall('Vertical', 1077, 741, 785)
+        Backgrounds.new_wall('Horizontal', 741, 1077, 1212)
+        Backgrounds.new_wall('Vertical', 1212, 654, 741)
+        Backgrounds.new_wall('Horizontal', 654, 943, 1212)
+        
+        Backgrounds.new_wall('Vertical', 943, 567, 610)
+        Backgrounds.new_wall('Horizontal', 567, 808, 943)
+        Backgrounds.new_wall('Vertical', 808, 392, 523)
+        Backgrounds.new_wall('Horizontal', 392, 808, 943)
+        
+        Backgrounds.new_wall('Vertical', 943, 261, 349)
+        Backgrounds.new_wall('Horizontal', 261, 875, 943)
+        Backgrounds.new_wall('Vertical', 875, 218, 218)
+        Backgrounds.new_wall('Horizontal', 218, 606, 875)
+        
+        Backgrounds.new_wall('Vertical', 606, 218, 218)
+        Backgrounds.new_wall('Horizontal', 261, 538, 606)
+        Backgrounds.new_wall('Vertical', 538, 261, 349)
+        Backgrounds.new_wall('Horizontal', 392, 538, 673)
+        
+        Backgrounds.new_wall('Vertical', 673, 392, 523)
+        Backgrounds.new_wall('Horizontal', 567, 538, 673)
+        Backgrounds.new_wall('Vertical', 538, 480, 523)
+        Backgrounds.new_wall('Horizontal', 480, 202, 538)
+        
     def check_collision(pos, hitbox, character):
         collisionDir = []
-        prime_hitbox = hitbox
-        prime_rect = (prime_hitbox[0][0][0], prime_hitbox[2][0][1], prime_hitbox[1][0][0], prime_hitbox[3][0][1])
-
-        pHitbox = player.hitbox()
-        player_rect = (pHitbox[0][0][0], pHitbox[2][0][1], pHitbox[1][0][0], pHitbox[3][0][1])
-
+        prime_rect = hitbox # setting and getting hitboxes
+        player_rect = player.hitbox()
+        
+        var = [10,10] if character == "projectile" else [15, 45]
+        
+        
+        
         # Check vertical walls
         # Check vertical walls
         for wall in verticalGrid:
@@ -796,12 +863,12 @@ class Backgrounds:
                 wall_y2 = wall[1][1]  # y-coordinate of the bottom end point
 
                 # Check if the player's new position overlaps with the wall
-                if (wall_x < pos[0] < wall_x + 15 and
-                    wall_y1 - 45 < pos[1] < wall_y2) and not('left' in collisionDir):                               
+                if (wall_x < pos[0] < wall_x + var[0] and
+                    wall_y1 - var[1] < pos[1] < wall_y2) and not('left' in collisionDir):                               
                     collisionDir.append('left') # Collision detected
 
-                if (wall_x - 15 < pos[0] < wall_x and
-                    wall_y1 - 45 < pos[1] < wall_y2) and not('right' in collisionDir):               
+                if (wall_x - var[0] < pos[0] < wall_x and
+                    wall_y1 - var[1] < pos[1] < wall_y2) and not('right' in collisionDir):               
                     collisionDir.append('right')
 
 
@@ -813,28 +880,25 @@ class Backgrounds:
                 wall_x2 = wall[1][0]  # x-coordinate of the right end point
 
                     # Check if the player's new position overlaps with the wall
-                if (wall_y <= pos[1] + 40 <= wall_y + 15 and                
+                if (wall_y <= pos[1] + 10 <= wall_y + var[0] and                
                     wall_x1 - 10 <= pos[0] <= wall_x2 + 10) and not('up' in collisionDir):
                     collisionDir.append('up')  # Collision detected
-                    
-                        
 
-                if (wall_y - 15 < pos[1] + 40 < wall_y and 
+
+
+                if (wall_y - var[0] < pos[1] + var[1] - 5 < wall_y and 
                     wall_x1  - 10< pos[0] < wall_x2+10) and not('down' in collisionDir):
                     collisionDir.append('down')  # Collision detected
-
-
 
         if character == 'enemy':
             for enemy in enemies:
                 if hitbox == enemy.hitbox():
-                    primeHitbox = enemy.hitbox()
-                    prime_rect = (primeHitbox[0][0][0], primeHitbox[2][0][1], primeHitbox[1][0][0], primeHitbox[3][0][1])
-
+                    
+                    prime_rect = enemy.hitbox()
+                    
             for enemy in enemies:
-                if hitbox != enemy.hitbox():
-                    eHitbox = enemy.hitbox()
-                    enemy_rect = (eHitbox[0][0][0], eHitbox[2][0][1], eHitbox[1][0][0], eHitbox[3][0][1]) 
+                if hitbox != enemy.hitbox(): 
+                    enemy_rect = enemy.hitbox()
                     #Checks collision of prime on right side of enemies and player
                     if ((prime_rect[2] >= enemy_rect[0] and prime_rect[0] < enemy_rect[0] and \
                        prime_rect[3] > enemy_rect[1]  and prime_rect[1] < enemy_rect[3]) or \
@@ -914,6 +978,11 @@ class Update:
             if enemy.state == "dead" and enemy.frame_index == 0:
                 enemies.remove(enemy)
                 SCORE += 10
+        for projectile in bouncing_objects:
+            projectile.update()
+            if projectile.hit == True:
+                bouncing_objects.remove(projectile)
+                print("removed")
         #print (enemies)
         if enemies == []:
             new_wave()
@@ -951,8 +1020,8 @@ class Update:
             ranged_enemy.draw(canvas, camera_x, camera_y)
         
         for fireball in bouncing_objects:
-            fireball.draw(canvas, camera_x, camera_y)
-            fireball.update()
+            fireball.drawSprite(canvas, camera_x, camera_y)
+            
     
     
     def draw_image(canvas, image, camera_x, camera_y, scale=1):
@@ -972,14 +1041,7 @@ class Update:
              HEIGHT / 2 - (camera_y - (img_height - HEIGHT) / 2)),
             (img_width * scale, img_height * scale)  # Scale image
         )
-        #if LIVES == 3:
-            #canvas.draw_image(LIVES_IMAGE, (16.5, 5.5),(33, 77), (16.5, 5.5),(33, 77)) 
-        #elif LIVES == 2:
-            #canvas.draw_image(LIVES_IMAGE, (16.5, 38.5),(33, 77), (16.5, 5.5),(16.5, 11))
-        #elif LIVES == 1:
-            #canvas.draw_image(LIVES_IMAGE, (16.5, 38.5),(33, 77), (16.5, 5.5),(16.5, 11))
-        #else:
-            #pass
+        
         
         canvas.draw_text(f"Lives: {LIVES}", (10, 20), 20, "White")
         canvas.draw_text(f"Score: {SCORE}", (220, 40), 20, "White")

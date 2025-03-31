@@ -47,6 +47,7 @@ FIREBALL_HIT = simplegui.load_image("https://i.imgur.com/dtYaPGM.png")
 RANGED_ENEMY_IDLE = simplegui.load_image("https://i.imgur.com/zHnkE5g.png")
 RANGED_ENEMY_ATTACK = simplegui.load_image("https://i.imgur.com/EXx8oHf.png")
 RANGED_ENEMY_DEATH = simplegui.load_image("https://i.imgur.com/YPXSoVx.png")
+HEALING_POTION = simplegui.load_image("https://i.imgur.com/p1ECdyv.png")
 # Loading animations
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
@@ -120,11 +121,15 @@ class NPC:
             "There's tons of skeletons! I hate skeletons!!",
             "For every one you 'clean-up' I'll pay you 10 gold!",
             "I think theres some on the otherside of the garden!",
-            "Have a go at 'cleaning them up'"
+            "Have a go at 'cleaning them up'",
+            "I will provide healing potions if it helps",
+            "Here you go the first one",
+            "Come back for another one after each group"
         ]
         self.message_index = 0
         self.frame_counter = 0
-        self.frame_delay = 180 
+        self.frame_delay = 180
+        self.healing_given = False
         
         
                  
@@ -174,6 +179,10 @@ class NPC:
                 self.frame_counter = 0  # Reset counter
                 if self.message_index < len(self.messages) - 1:
                     self.message_index += 1
+                    if self.message_index == 7 and self.healing_given == False:
+                        healing_potion.activate()
+                        self.healing_given = True;
+                        
             
 class Player:
     def __init__(self, x, y, speed, health, name, AP, DM):
@@ -369,8 +378,44 @@ class Player:
                                  (bar_x + bar_width * health_ratio, bar_y + bar_height),
                                  (bar_x, bar_y + bar_height)], 
                                 1, "black", "green")
+            
+    def healing(self, healing):
+        self.health += healing
+        if self.health > self.max_health:
+            self.health = self.max_healt
+        
+        
     def get_p(self):
         return self.pos
+    
+    
+class HealingPotion:
+    def __init__(self, x , y):
+        self.pos = [x, y] 
+        self.healing = 50
+        self.image_width = HEALING_POTION.get_width()
+        self.image_height = HEALING_POTION.get_height()
+        self.active = False
+    
+    def update(self):
+        if self.active == True:
+            distance = ((player.pos[0] - self.pos[0])**2 + (player.pos[1] - self.pos[1])**2)**0.5  
+
+            if distance <= 70:
+                player.healing(self.healing)
+                self.active = False
+        
+    def draw(self, canvas, camera_x, camera_y):
+        if self.active == True:
+            canvas.draw_image(
+                HEALING_POTION,
+                (self.image_width / 2, self.image_height / 2), 
+                (self.image_width, self.image_height), 
+                (self.pos[0] - camera_x, self.pos[1] - camera_y),  
+                (50, 50))
+            
+    def activate(self):
+        self.active = True
     
 class Enemy:
     def __init__(self, x, y, speed, health, name, AP, DM, player, xVar, yVar):
@@ -1142,6 +1187,8 @@ class Update:
         #print (enemies)
         if enemies == []:
             new_wave()
+            
+        healing_potion.update()
                 
                 
             
@@ -1180,6 +1227,8 @@ class Update:
             
         for explosion in exploding_objects:
             explosion.drawExplosion(canvas, camera_x, camera_y)
+            
+        healing_potion.draw(canvas, camera_x, camera_y)
             
     
     
@@ -1275,9 +1324,10 @@ def new_wave():
         y_variation = random.randint(0, 100)
         enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
         enemies.append(enemy)
+    healing_potion.activate()
         
 def initialize_game():
-    global player, enemies, ranged_enemies, bouncing_objects, exploding_objects ,NPCs, WAVE, SCORE
+    global player, enemies, ranged_enemies, bouncing_objects, exploding_objects, NPCs, WAVE, SCORE, healing_potion
     SCORE = 0
     WAVE = 0
     # Initialize player
@@ -1298,6 +1348,8 @@ def initialize_game():
     
     bouncing_objects = []
     exploding_objects = []
+    healing_potion = HealingPotion(915, 745)
+    
     
     for i in range(amount_of_ranged):
         x_variation = random.randint(100, 300)

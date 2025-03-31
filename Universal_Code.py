@@ -31,6 +31,7 @@ BACKGROUND = simplegui.load_image("https://i.imgur.com/oHrKyJ2.png")
 BKG_2 = simplegui.load_image("https://i.imgur.com/O671jzf.jpeg")
 BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
 EXPLOSION_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n8lrksp0as7maf5v7xg0k/explosion-312361.mp3?rlkey=l3yago6kmsh2utwey48lkdo0h&st=d2bdyxza")
+POTION_DRINKING_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n76nsgjxmyyr7jkjzrufi/085594_potion-35983.mp3?rlkey=l8glwgs6nwye5av1og8bbntv9&st=sfcxevjp")
 
 # Loading sprites and animations (player and enemy)
 NPC_IMAGE = simplegui.load_image("https://i.imgur.com/wU60Hb7.png")
@@ -382,7 +383,7 @@ class Player:
     def healing(self, healing):
         self.health += healing
         if self.health > self.max_health:
-            self.health = self.max_healt
+            self.health = self.max_health
         
         
     def get_p(self):
@@ -401,8 +402,9 @@ class HealingPotion:
         if self.active == True:
             distance = ((player.pos[0] - self.pos[0])**2 + (player.pos[1] - self.pos[1])**2)**0.5  
 
-            if distance <= 70:
+            if distance <= 50:
                 player.healing(self.healing)
+                POTION_DRINKING_EFFECT.play()
                 self.active = False
         
     def draw(self, canvas, camera_x, camera_y):
@@ -412,7 +414,7 @@ class HealingPotion:
                 (self.image_width / 2, self.image_height / 2), 
                 (self.image_width, self.image_height), 
                 (self.pos[0] - camera_x, self.pos[1] - camera_y),  
-                (50, 50))
+                (40, 40))
             
     def activate(self):
         self.active = True
@@ -1348,7 +1350,7 @@ def initialize_game():
     
     bouncing_objects = []
     exploding_objects = []
-    healing_potion = HealingPotion(915, 745)
+    healing_potion = HealingPotion(905, 775)
     
     
     for i in range(amount_of_ranged):
@@ -1396,6 +1398,7 @@ frame.set_mouseclick_handler(Welcome.welcome_click)
 frame.add_button("Test restart", game_reset, 150)
 
 # Start background music
+BACKGROUND_MUSIC.set_volume(0.25)
 BACKGROUND_MUSIC.play()
 
 # Start the game

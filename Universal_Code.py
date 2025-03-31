@@ -29,6 +29,7 @@ SPEECH = simplegui.load_image("https://i.imgur.com/RHrJ2RA.png")
 BACKGROUND = simplegui.load_image("https://i.imgur.com/oHrKyJ2.png")
 BKG_2 = simplegui.load_image("https://i.imgur.com/O671jzf.jpeg")
 BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
+EXPLOSION_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n8lrksp0as7maf5v7xg0k/explosion-312361.mp3?rlkey=l3yago6kmsh2utwey48lkdo0h&st=d2bdyxza")
 
 # Loading sprites and animations (player and enemy)
 NPC_IMAGE = simplegui.load_image("https://i.imgur.com/wU60Hb7.png")
@@ -41,6 +42,7 @@ ENEMY_RUN_IMAGE = simplegui.load_image("https://i.imgur.com/QomI2XQ.png")
 ENEMY_ATTACK_IMAGE = simplegui.load_image("https://i.imgur.com/eJ7dTBA.png")
 ENEMY_DEATH_IMAGE = simplegui.load_image("https://i.imgur.com/mPEEU4v.png")
 FIREBALL_WRIGHT = simplegui.load_image("https://i.imgur.com/gPDsxrc.png")
+FIREBALL_HIT = simplegui.load_image("https://i.imgur.com/dtYaPGM.png")
 # Loading animations
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
@@ -300,7 +302,6 @@ class Player:
         return rect
     
     def draw(self, canvas, camera_x, camera_y):
-        """Draw player sprite."""
         #print(self.hurt)
         if self.hurt and self.facing_right:
             sprite_image = HURT_IMAGE
@@ -629,7 +630,6 @@ class bouncingObject:
         self.radius = radius
         self.bounce_limit = bounce_limit
         self.bounces = 0
-        self.hit = False
         self.sprite_width = 154
         self.sprite_height = 154
         self.num_frames = 5
@@ -639,6 +639,10 @@ class bouncingObject:
         self.scale = 0.5
         self.Hitbox = self.hitbox()
         self.player = player
+        self.scale_fireball = 1
+        self.exploding = False
+        self.row_explosion = 0
+        self.col_explosion = 0
     
     def hitbox(self):
    
@@ -658,24 +662,41 @@ class bouncingObject:
             (enemy_rect[0]  <= player_rect[2] and enemy_rect[2] > player_rect[2] and 
             enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3])):
               
-            self.hit = True
+            bouncing_objects.remove(self)
+            self.sprite_width = 103
+            self.sprite_height = 106
+            self.exploding = True
+            EXPLOSION_EFFECT.play()
+            
+            exploding_objects.append(self)
             player.take_damage(15)
             
             
             
     def update(self):
-        self.pos.add(self.vel)
-        self.check_hit()
-        
-        global bouncing_objects
-        if self.bounces >= self.bounce_limit:
-            bouncing_objects.remove(self)
-            
-        self.frame_counter += 1
-        if self.frame_counter >= self.animation_speed:
-            self.current_frame = (self.current_frame + 1) % self.num_frames
-            self.frame_counter = 0
-        
+        if self.exploding is False:
+            self.pos.add(self.vel)
+            self.check_hit()
+
+            global bouncing_objects
+            if self.bounces >= self.bounce_limit:
+                bouncing_objects.remove(self)
+
+            self.frame_counter += 1
+            if self.frame_counter >= self.animation_speed:
+                self.current_frame = (self.current_frame + 1) % self.num_frames
+                self.frame_counter = 0
+                
+        if self.exploding is True:
+            self.frame_counter += 1
+            if self.frame_counter >= self.animation_speed:
+                self.col_explosion +=1
+                if self.col_explosion >= 7:
+                    self.col_explosion = 0
+                    self.row_explosion += 1
+                if self.row_explosion >= 3:
+                    exploding_objects.remove(self)
+                self.frame_counter = 0
     
             
     def drawSprite(self, canvas, camera_x, camera_y):
@@ -701,6 +722,25 @@ class bouncingObject:
             (self.pos.x - camera_x, self.pos.y - camera_y),  
             (scaled_width, scaled_height),
             angle)
+        
+    def drawExplosion(self, canvas, camera_x, camera_y):
+        
+
+        frame_x = self.col_explosion * self.sprite_width
+        frame_y = self.row_explosion * self.sprite_height
+        
+        scaled_width = self.sprite_width * self.scale_fireball
+        scaled_height = self.sprite_height * self.scale_fireball
+        
+        
+        
+        canvas.draw_image(
+            FIREBALL_HIT,
+            (frame_x + self.sprite_width // 2, frame_y + self.sprite_height // 2), 
+            (self.sprite_width, self.sprite_height), 
+            (self.pos.x - camera_x, self.pos.y - camera_y),  
+            (scaled_width, scaled_height))
+        
                
 class RangedEnemy:
     def __init__(self, x, y, speed, health, name, AP, DM, player, xVar, yVar):
@@ -930,12 +970,6 @@ class Backgrounds:
 
 
 
-
-
-
-
-
-
         return collisionDir
     
 class Keys:
@@ -980,9 +1014,8 @@ class Update:
                 SCORE += 10
         for projectile in bouncing_objects:
             projectile.update()
-            if projectile.hit == True:
-                bouncing_objects.remove(projectile)
-                print("removed")
+        for exmplosion in exploding_objects:
+            exmplosion.update()
         #print (enemies)
         if enemies == []:
             new_wave()
@@ -1021,6 +1054,9 @@ class Update:
         
         for fireball in bouncing_objects:
             fireball.drawSprite(canvas, camera_x, camera_y)
+            
+        for explosion in exploding_objects:
+            explosion.drawExplosion(canvas, camera_x, camera_y)
             
     
     
@@ -1118,7 +1154,7 @@ def new_wave():
         enemies.append(enemy)
         
 def initialize_game():
-    global player, enemies, ranged_enemies, bouncing_objects,NPCs, WAVE, SCORE
+    global player, enemies, ranged_enemies, bouncing_objects, exploding_objects ,NPCs, WAVE, SCORE
     SCORE = 0
     WAVE = 0
     # Initialize player
@@ -1138,6 +1174,7 @@ def initialize_game():
     amount_of_ranged = 1
     
     bouncing_objects = []
+    exploding_objects = []
     
     for i in range(amount_of_ranged):
         x_variation = random.randint(100, 300)

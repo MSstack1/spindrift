@@ -677,15 +677,27 @@ class bouncingObject:
         self.exploding = False
         self.row_explosion = 0
         self.col_explosion = 0
-        self.state = "moving"
     
     def coll_check(self):
+        
         collStat = Backgrounds.check_collision([self.pos.x,self.pos.y], self.hitbox(), "projectile")
-        if collStat != []:
-            self.state = "dead"
+        if 'left' in collStat or 'right' in collStat:
+            self.vel.negate_x()
+            self.bounces += 1
             
+        if 'up' in collStat or 'down' in collStat:
+            self.vel.negate_y()
+            self.bounces += 1
+        if self.bounces > self.bounce_limit:
+            self.projectile_hit()
             
-    
+    def projectile_hit(self):
+            bouncing_objects.remove(self)
+            self.sprite_width = 103
+            self.sprite_height = 106
+            self.exploding = True
+            exploding_objects.append(self)
+            
     
     def hitbox(self):
    
@@ -705,27 +717,18 @@ class bouncingObject:
             (enemy_rect[0]  <= player_rect[2] and enemy_rect[2] > player_rect[2] and 
             enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3])):
               
-            bouncing_objects.remove(self)
-            self.sprite_width = 103
-            self.sprite_height = 106
-            self.exploding = True
-            EXPLOSION_EFFECT.play()
-            
-            exploding_objects.append(self)
+            self.projectile_hit()
             player.take_damage(15)
             
             
             
     def update(self):
-        self.coll_check()
         
         if self.exploding == False:
+            self.coll_check()
             self.pos.add(self.vel)
             self.check_hit()
-
-            global bouncing_objects
-            if self.bounces >= self.bounce_limit:
-                bouncing_objects.remove(self)
+            
 
             self.frame_counter += 1
             if self.frame_counter >= self.animation_speed:
@@ -841,7 +844,7 @@ class RangedEnemy:
             direction[1] = (direction[1] / magnitude) * 2.5    
        
         if (distance < 200 and self.attack_cooldown <= 0):
-            fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 10)
+            fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 5)
             bouncing_objects.append(fireball)
             self.state = "attack"
             self.attack_cooldown = 270
@@ -1133,8 +1136,7 @@ class Update:
                 SCORE += 50
         for projectile in bouncing_objects:
             projectile.update()
-            if projectile.state == "dead":
-                bouncing_objects.remove(projectile)
+            
         for exmplosion in exploding_objects:
             exmplosion.update()
         #print (enemies)

@@ -9,6 +9,7 @@ PLAYER_SPEED = 5
 FRAME_COUNT = 6
 NPC_FRAME_COUNT = 5
 ATTACK_FRAME_COUNT = 5
+RANGED_ENEMY_ATTACK_FRAME_COUNT = 8
 PLAYER_HURT_FRAME_COUNT = 3
 DEAD_FRAME_COUNT = 4
 FRAME_DELAY = 5
@@ -43,6 +44,9 @@ ENEMY_ATTACK_IMAGE = simplegui.load_image("https://i.imgur.com/eJ7dTBA.png")
 ENEMY_DEATH_IMAGE = simplegui.load_image("https://i.imgur.com/mPEEU4v.png")
 FIREBALL_WRIGHT = simplegui.load_image("https://i.imgur.com/gPDsxrc.png")
 FIREBALL_HIT = simplegui.load_image("https://i.imgur.com/dtYaPGM.png")
+RANGED_ENEMY_IDLE = simplegui.load_image("https://i.imgur.com/zHnkE5g.png")
+RANGED_ENEMY_ATTACK = simplegui.load_image("https://i.imgur.com/EXx8oHf.png")
+RANGED_ENEMY_DEATH = simplegui.load_image("https://i.imgur.com/YPXSoVx.png")
 # Loading animations
 IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/LMXaTlK.png")
 RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/J8DS6FF.png")
@@ -52,6 +56,9 @@ ENEMY_IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/pxSuood.png")
 ENEMY_RUN_FLIPPED = simplegui.load_image("https://i.imgur.com/n8hPFhE.png")
 ENEMY_ATTACK_FLIPPED = simplegui.load_image("https://i.imgur.com/KTSabih.png")
 ENEMY_DEATH_FLIPPED = simplegui.load_image("https://i.imgur.com/fdffUJr.png")
+RANGED_ENEMY_IDLE_FLIPPED = simplegui.load_image("https://i.imgur.com/9INlzYg.png")
+RANGED_ENEMY_ATTACK_FLIPPED = simplegui.load_image("https://i.imgur.com/IaIFMfZ.png")
+RANGED_ENEMY_DEATH_FLIPPED = simplegui.load_image("https://i.imgur.com/OmMnhkA.png")
 
 
 BACKGROUND_WIDTH = BACKGROUND.get_width()
@@ -286,7 +293,17 @@ class Player:
                 # If there's a hit, apply damage to the enemy
                 enemy.take_damage(self.AP) 
                 #print(f"Hit {enemy.name} for {self.AP} damage!")  # Debugging line
-                break     
+                break  
+                
+        for ranged_enemy in ranged_enemies:
+            distance = ((self.pos[0] - ranged_enemy.pos[0]) ** 2 + (self.pos[1] - ranged_enemy.pos[1]) ** 2) ** 0.5
+
+            # Check if the distance is within the attack range
+            if distance <= attack_range:
+                # If there's a hit, apply damage to the enemy
+                ranged_enemy.take_damage(self.AP) 
+                #print(f"Hit {enemy.name} for {self.AP} damage!")  # Debugging line
+                break 
     
     
     def hitbox(self):
@@ -324,6 +341,11 @@ class Player:
                           (SPRITE_WIDTH, SPRITE_HEIGHT), 
                           (WIDTH // 2, HEIGHT // 2), 
                           DISPLAY_SIZE)
+        hitbox = self.hitbox()
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
+        canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
         
         
         # Draw Health Bar
@@ -384,6 +406,7 @@ class Enemy:
         if ((enemy_rect[2] > player_rect[0] and enemy_rect[0] < player_rect[0] and enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3]) or \                                                         
             (enemy_rect[0]  <= player_rect[2] and enemy_rect[2] > player_rect[2] and 
             enemy_rect[3] > player_rect[1] and enemy_rect[1] < player_rect[3])):
+              
               
             damage = self.AP * self.player.DM
             self.player.take_damage(damage)
@@ -520,7 +543,7 @@ class Enemy:
     def hitbox(self):
         #box[0] is left, 1 is right, 2 is top, 3 is bottom
         self.Hitbox=[]
-        position = [self.adjusted_x, self.adjusted_y]
+        position = [self.pos[0], self.pos[1]]
         self.Hitbox.append((((position[0] - 15), (position[1] - 5)),((position[0] - 15), (position[1] + 50))))
         self.Hitbox.append((((position[0] + 15), (position[1] - 5)),((position[0] + 15), (position[1] + 50))))
         self.Hitbox.append((self.Hitbox[0][0], self.Hitbox[1][0]))
@@ -587,8 +610,19 @@ class Enemy:
         hitbox = self.hitbox()
         
         
-        #for i in range(4):
-            #canvas.draw_line((self.Hitbox[i][0]), (self.Hitbox[i][1]), 2, 'Red')
+        hitbox = self.hitbox()
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
+        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
+        canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
+        
+        
+        
+        #canvas.draw_line((hitbox[0], hitbox[1]), (hitbox[2], hitbox[1]), 2, 'Red')  # Top edge
+        #canvas.draw_line((hitbox[0], hitbox[3]), (hitbox[2], hitbox[3]), 2, 'Red')  # Left edge
+        #canvas.draw_line((hitbox[0], hitbox[1]), (hitbox[0], hitbox[3]), 2, 'Red')  # Right edge
+        #canvas.draw_line((hitbox[2], hitbox[1]), (hitbox[2], hitbox[3]), 2, 'Red')  # Bottom edge
+        
         
         frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
         
@@ -643,6 +677,15 @@ class bouncingObject:
         self.exploding = False
         self.row_explosion = 0
         self.col_explosion = 0
+        self.state = "moving"
+    
+    def coll_check(self):
+        collStat = Backgrounds.check_collision([self.pos.x,self.pos.y], self.hitbox(), "projectile")
+        if collStat != []:
+            self.state = "dead"
+            
+            
+    
     
     def hitbox(self):
    
@@ -674,7 +717,9 @@ class bouncingObject:
             
             
     def update(self):
-        if self.exploding is False:
+        self.coll_check()
+        
+        if self.exploding == False:
             self.pos.add(self.vel)
             self.check_hit()
 
@@ -767,10 +812,29 @@ class RangedEnemy:
         self.counter_b = 5
         self.notMoving = True
         self.escapeTime = 501
-        
+
+    def take_damage(self, dmg):
+        self.health -= dmg
+        if self.health <= 0:
+            self.state = "dead"
+            self.frame_index = 0
+        else:
+            pass
+            
     def range_check(self, player):  
-        distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5    
-        direction = [self.player_pos[0] - self.pos[0], self.player_pos[1] - self.pos[1]]
+        
+        distance = ((player.pos[0] - self.pos[0])**2 + (player.pos[1] - self.pos[1])**2)**0.5    
+        direction = [player.pos[0] - self.pos[0], player.pos[1] - self.pos[1]]
+        tempDir = self.facing_right
+        if self.player_pos[0] <= self.pos[0] + 15:
+            self.facing_right = False
+        elif self.player_pos[0] >= self.pos[0] - 15:
+            self.facing_right = True
+        
+        if self.facing_right != tempDir and self.facing_right == False:
+            self.pos[0] -= 15
+        elif self.facing_right != tempDir and self.facing_right == True:
+            self.pos[0] += 15
         magnitude = (direction[0]**2 + direction[1]**2) ** 0.5
         if magnitude != 0:  # Avoid division by zero
             direction[0] = (direction[0] / magnitude) * 2.5
@@ -779,16 +843,66 @@ class RangedEnemy:
         if (distance < 200 and self.attack_cooldown <= 0):
             fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 10)
             bouncing_objects.append(fireball)
+            self.state = "attack"
             self.attack_cooldown = 270
             
         self.attack_cooldown -= 1
+       
+    def update_animation(self, player): 
+        distance = ((self.player_pos[0] - self.pos[0])**2 + (self.player_pos[1] - self.pos[1])**2)**0.5    
+        if self.state == "dead":
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % DEAD_FRAME_COUNT
+                print(self.frame_index)
+                if self.frame_index == 0: 
+                    
+                    clear_dead(self.pos)
         
-        
-    
+        if self.state == 'attack':
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % RANGED_ENEMY_ATTACK_FRAME_COUNT
+
+                if self.frame_index == 0:                        
+                                                                    
+                        self.state = 'idle'
+                        self.frame_index = 0
+
+        else:
+            self.frame_timer += 1
+            if self.frame_timer >= 10:
+                self.frame_timer = 0
+                self.frame_index = (self.frame_index + 1) % FRAME_COUNT
+
+                
     def draw(self, canvas, camera_x, camera_y):
         self.range_check(player)
+        if self.state == "idle" and self.facing_right == True:
+            sprite_image = RANGED_ENEMY_IDLE
         
-        sprite_image = IDLE_IMAGE
+        elif self.state == "idle" and self.facing_right == False:
+            sprite_image = RANGED_ENEMY_IDLE_FLIPPED
+            
+        elif self.state == 'attack' and self.facing_right:
+            sprite_image = RANGED_ENEMY_ATTACK
+            
+        elif self.state == 'attack' and not self.facing_right:
+            sprite_image = RANGED_ENEMY_ATTACK_FLIPPED
+            
+        elif self.state == 'dead' and self.facing_right:
+            sprite_image = RANGED_ENEMY_DEATH
+            
+        elif self.state == 'dead' and not self.facing_right:
+            sprite_image = RANGED_ENEMY_DEATH_FLIPPED
+        else:
+            if self.facing_right == True:
+                sprite_image = RANGED_ENEMY_IDLE
+            else:
+                sprite_image = RANGED_ENEMY_IDLE_FLIPPED
+                
         frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
         
         self.adjusted_x = self.pos[0] - camera_x 
@@ -1012,8 +1126,15 @@ class Update:
             if enemy.state == "dead" and enemy.frame_index == 0:
                 enemies.remove(enemy)
                 SCORE += 10
+        for ranged_enemy in ranged_enemies:    
+            ranged_enemy.update_animation(player)
+            if ranged_enemy.state == "dead" and ranged_enemy.frame_index == 0:
+                ranged_enemies.remove(ranged_enemy)
+                SCORE += 50
         for projectile in bouncing_objects:
             projectile.update()
+            if projectile.state == "dead":
+                bouncing_objects.remove(projectile)
         for exmplosion in exploding_objects:
             exmplosion.update()
         #print (enemies)

@@ -32,6 +32,7 @@ BKG_2 = simplegui.load_image("https://i.imgur.com/O671jzf.jpeg")
 BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
 EXPLOSION_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n8lrksp0as7maf5v7xg0k/explosion-312361.mp3?rlkey=l3yago6kmsh2utwey48lkdo0h&st=d2bdyxza")
 POTION_DRINKING_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n76nsgjxmyyr7jkjzrufi/085594_potion-35983.mp3?rlkey=l8glwgs6nwye5av1og8bbntv9&st=sfcxevjp")
+PLAYER_ATTACKEFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/5jtk6obferdvbsi9tck6x/audiomass-output.mp3?rlkey=9s6kqrb3zlvjy03f5unvioega&st=veueqnuo")
 
 # Loading sprites and animations (player and enemy)
 NPC_IMAGE = simplegui.load_image("https://i.imgur.com/wU60Hb7.png")
@@ -289,6 +290,8 @@ class Player:
                 
         
     def attack_move(self):
+        PLAYER_ATTACKEFFECT.set_volume(0.2)
+        PLAYER_ATTACKEFFECT.play()
         print (self.pos)
         self.attack = True
         self.frame_index = 0
@@ -744,6 +747,7 @@ class bouncingObject:
             self.sprite_height = 106
             self.exploding = True
             exploding_objects.append(self)
+            EXPLOSION_EFFECT.play()
             
     
     def hitbox(self):

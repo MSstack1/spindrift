@@ -35,7 +35,8 @@ MAP_3 = simplegui.load_image("https://i.imgur.com/dffJPya.png")
 BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com/codeskulptor-assets/Epoq-Lepidoptera.ogg")
 EXPLOSION_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n8lrksp0as7maf5v7xg0k/explosion-312361.mp3?rlkey=l3yago6kmsh2utwey48lkdo0h&st=d2bdyxza")
 POTION_DRINKING_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n76nsgjxmyyr7jkjzrufi/085594_potion-35983.mp3?rlkey=l8glwgs6nwye5av1og8bbntv9&st=sfcxevjp")
-PLAYER_ATTACKEFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/5jtk6obferdvbsi9tck6x/audiomass-output.mp3?rlkey=9s6kqrb3zlvjy03f5unvioega&st=veueqnuo")
+PLAYER_ATTACK_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/5jtk6obferdvbsi9tck6x/audiomass-output.mp3?rlkey=9s6kqrb3zlvjy03f5unvioega&st=veueqnuo")
+CASTING_FIREBALL_EFFECT = ("https://dl.dropboxusercontent.com/scl/fi/2bql0zhkx70218lyg0hne/magic-spell-6005.mp3?rlkey=jy9xq9mf5p0gqa8n5a1vqmk1z&st=n4jjw4j6")
 
 # Loading sprites and animations (player and enemy)
 NPC_IMAGE = simplegui.load_image("https://i.imgur.com/wU60Hb7.png")
@@ -314,8 +315,8 @@ class Player:
                 
         
     def attack_move(self):
-        PLAYER_ATTACKEFFECT.set_volume(0.2)
-        PLAYER_ATTACKEFFECT.play()
+        PLAYER_ATTACK_EFFECT.set_volume(0.2)
+        PLAYER_ATTACK_EFFECT.play()
         print (self.pos)
         self.attack = True
         self.frame_index = 0
@@ -922,6 +923,7 @@ class RangedEnemy:
             fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 5)
             bouncing_objects.append(fireball)
             self.state = "attack"
+            CASTING_FIREBALL_EFFECT.play()
             self.attack_cooldown = 270
             
         self.attack_cooldown -= 1

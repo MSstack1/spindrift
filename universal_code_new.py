@@ -88,10 +88,6 @@ MAP_2_TELEPORT = [987.4695167279529, 19.60660171779881]
 RETURN_MAP_1 = [945.132034355966, 811.1320343559634]
 RETURN_MAP_2 = [987.4695167279529, 24.60660171779881]
 
-MAP_2_X_TELEPORT = [1263.28427124746, 718.1168824543155]
-MAP_3_TELEPORT = [25.33748237199018, 638.8097038856282]
-RETURN_MAP_2_X = [1253.28427124746, 718.1168824543155]
-
 area = 1
 map_change = False
 
@@ -112,7 +108,8 @@ class Welcome:
         if DEATH_SCREEN:
             Welcome.draw_image(canvas, WASTED, 250, 100, 2)
             canvas.draw_text(f"Score last game: {SCORE}", (10, 40), 20, "White")
-        
+            
+            
     def welcome_click(pos):
         if ((WIDTH/2 - 40 <= pos[0] <= WIDTH/2 + 40) and (HEIGHT/1.25 - 20 <= pos[1] <= HEIGHT/1.25 + 20)):
             frame.set_draw_handler(Update.draw)
@@ -259,6 +256,7 @@ class Player:
             self.is_moving = True
         
         elif self.keys["j"] and self.attack_cooldown == 0:
+            
             self.attack_cooldown = 35
             self.attack_move()
         
@@ -309,6 +307,7 @@ class Player:
             if self.health <= 0:
                 LIVES -= 1
                 self.pos = [743,254]
+                
                 self.health = 100
                 if LIVES <= 0:
                     game_reset()
@@ -380,11 +379,12 @@ class Player:
                           (WIDTH // 2, HEIGHT // 2), 
                           DISPLAY_SIZE)
         hitbox = self.hitbox()
-        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
-        canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
-        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
-        canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
+        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
+        #canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
+        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
+        #canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
         
+        #canvas.draw_circle([self.pos[0] - camera_x, self.pos[1] - camera_y], 5, 4, "Blue")
         
         # Draw Health Bar
         bar_width = 50
@@ -461,6 +461,7 @@ class Enemy:
         self.frame_index = 0
         self.frame_timer = 0
         self.health = health
+        self.max_health = health
         self.max_enemy_health = health
         self.name = name
         self.AP = AP
@@ -691,6 +692,11 @@ class Enemy:
         canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
         canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
         
+        bar_width = 50
+        bar_height = 5
+           # Above player
+        
+        # Health bar background
         
         
         #canvas.draw_line((hitbox[0], hitbox[1]), (hitbox[2], hitbox[1]), 2, 'Red')  # Top edge
@@ -712,6 +718,16 @@ class Enemy:
                            self.adjusted_y), 
                           DISPLAY_SIZE)
         
+        
+
+        # Draw current health
+        health_ratio = max(self.health / self.max_health, 0)  
+        if health_ratio > 0:  
+            canvas.draw_polygon([((self.adjusted_x - 10)- bar_width // 2, (self.adjusted_y - 15)),
+                                 ((self.adjusted_x - 10)- bar_width // 2 + bar_width * health_ratio, (self.adjusted_y - 15)),
+                                 ((self.adjusted_x - 15)- bar_width // 2 + bar_width * health_ratio, (self.adjusted_y - 15) + bar_height),
+                                 ((self.adjusted_x - 15)- bar_width // 2, (self.adjusted_y - 15) + bar_height)], 
+                                1, "black", "green")
     def get_p(self):
         return self.pos
        
@@ -827,10 +843,10 @@ class bouncingObject:
         """Draws the fireball using the sprite sheet."""
         
         hitbox = self.hitbox()
-        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
-        canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
-        canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
-        canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
+        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
+        #canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
+        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
+        #canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
         
         frame_x = self.current_frame * self.sprite_width
         
@@ -923,7 +939,8 @@ class RangedEnemy:
             fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 5)
             bouncing_objects.append(fireball)
             self.state = "attack"
-            CASTING_FIREBALL_EFFECT.play()
+            #print(CASTING_FIREBALL_EFFECT)
+            #CASTING_FIREBALL_EFFECT.play()
             self.attack_cooldown = 270
             
         self.attack_cooldown -= 1
@@ -987,7 +1004,7 @@ class RangedEnemy:
         
         self.adjusted_x = self.pos[0] - camera_x 
         self.adjusted_y = self.pos[1] - camera_y
-        
+        #print(self.adjusted_x, self.adjusted_y)
         canvas.draw_image(sprite_image, 
                           (frame_x, SPRITE_HEIGHT / 2), 
                           (SPRITE_WIDTH, SPRITE_HEIGHT), 
@@ -998,84 +1015,150 @@ class RangedEnemy:
         
         
         
-        
-verticalGrid = []
-horizontalGrid = []    
-    
+verticalGridMap1 = []
+horizontalGridMap1 = []    
+verticalGridMap2 = []
+horizontalGridMap2 = []
+
 class Backgrounds:    
     def create_grid():
         for x in range(19):
             for y in range(22):
                 p1 = (x * MAP_1_WIDTH/19, y * MAP_1_HEIGHT/22)
                 p2 = (x * MAP_1_WIDTH/19, (y + 1) * MAP_1_HEIGHT/22)
-                verticalGrid.append((p1,p2, 0))
+                verticalGridMap1.append((p1,p2, 0, "None"))
 
         for x in range(23):
             for y in range(20):
                 p1 = (0 + y * (MAP_1_WIDTH/19), x * MAP_1_HEIGHT/22)
                 p2 = (0 + ((y + 1) * MAP_1_WIDTH/19), x * MAP_1_HEIGHT/22)            
-                horizontalGrid.append((p1,p2, 0))
+                horizontalGridMap1.append((p1,p2, 0, "None"))
 
-        for x in verticalGrid:
-            print(x)
+        for x in range(26):
+            for y in range(23):
+                # Calculate points with 2000 offset on x-axis
+                p1 = (2000 + x * MAP_1_WIDTH/25, y * MAP_1_HEIGHT/23)
+                p2 = (2000 + x * MAP_1_WIDTH/25, (y + 1) * MAP_1_HEIGHT/23)
+                verticalGridMap2.append((p1, p2, 0, "None"))  # Added type identifier
+
+        # Horizontal lines for Map 2 (positioned at x=2000)
+        for x in range(24):  # Note: Changed to 26 to match vertical count
+            for y in range(25):  # Note: Changed to 24 to match horizontal count
+                # Calculate points with 2000 offset on x-axis
+                p1 = (2000 + y * MAP_1_WIDTH/25, x * MAP_1_HEIGHT/23)
+                p2 = (2000 + (y + 1) * MAP_1_WIDTH/25, x * MAP_1_HEIGHT/23)
+                horizontalGridMap2.append((p1, p2, 0, "None"))                                        
         
-        for x in range(10):
-            print()
-        
-        for x in horizontalGrid:
-            print(x)
         
     def new_wall(side, constant, beginning, end):
-        if side == 'Vertical':
-            for x in range(len(verticalGrid)):
-                if ((constant - 5 <= verticalGrid[x][0][0] <= constant + 5) and (beginning-5 <= verticalGrid[x][0][1] <= end +5)):
-                    verticalGrid[x] = (verticalGrid[x][0], verticalGrid[x][1], side)                
-                    print(verticalGrid[x], "SUCCESS")
-                    
-        elif side == 'Horizontal':
-            for x in range(len(horizontalGrid)):
-                if ((constant - 1 < horizontalGrid[x][0][1] < constant + 1) and (beginning <= horizontalGrid[x][0][0] <= end)):
-                    horizontalGrid[x] = (horizontalGrid[x][0], horizontalGrid[x][1], side)
-                    print(horizontalGrid[x], "SUCCESS")
-        else:
-            print("Incorrect format for side:", side, " constant:", constant, " beginning:", beginning, " end:", end)
+        for x in range(len(verticalGridMap1)):
+            if side == 'Vertical':           
+                if ((constant - 5 <= verticalGridMap1[x][0][0] <= constant + 5) and (beginning-5 <= verticalGridMap1[x][0][1] <= end +5)):
+                    verticalGridMap1[x] = (verticalGridMap1[x][0], verticalGridMap1[x][1], side, "Island")                
+                    #print(verticalGridMap1[x], "SUCCESS")
+        
+        for x in range(len(horizontalGridMap1)):            
+            if side == 'Horizontal':            
+                if ((constant - 1 < horizontalGridMap1[x][0][1] < constant + 1) and (beginning <= horizontalGridMap1[x][0][0] <= end)):
+                    horizontalGridMap1[x] = (horizontalGridMap1[x][0], horizontalGridMap1[x][1], side, "Island")
+                    #print(horizontalGridMap1[x], "SUCCESS")
+        
+        for x in range(len(verticalGridMap2)):
+            if side == 'Vertical':            
+                if ((constant - 5 <= verticalGridMap2[x][0][0] <= constant + 5) and (beginning-5 <= verticalGridMap2[x][0][1] <= end +5)):
+                    verticalGridMap2[x] = (verticalGridMap2[x][0], verticalGridMap2[x][1], side, "Dungeon")                
+                    #print(verticalGridMap2[x], "SUCCESS")
 
+                    
+        for x in range(len(horizontalGridMap2)):            
+            if side == 'Horizontal':           
+                if ((constant - 1 < horizontalGridMap2[x][0][1] < constant + 1) and (beginning <= horizontalGridMap2[x][0][0] <= end)):
+                    horizontalGridMap2[x] = (horizontalGridMap2[x][0], horizontalGridMap2[x][1], side, "Dungeon")
+                    #print(horizontalGridMap2[x], "SUCCESS")
+                
+                
     def create_walls():
-        print("TRY")
+        #island
         Backgrounds.new_wall('Vertical', 202, 480, 610)
         Backgrounds.new_wall('Horizontal', 654, 202, 404)
         Backgrounds.new_wall('Vertical', 404, 654, 785)
-        Backgrounds.new_wall('Horizontal', 785, 404, 875)
-        
+        Backgrounds.new_wall('Horizontal', 785, 404, 875)        
         Backgrounds.new_wall('Vertical', 875, 785, 872)
         Backgrounds.new_wall('Horizontal', 872, 875, 1010)
         Backgrounds.new_wall('Vertical', 1010, 785, 872)
-        Backgrounds.new_wall('Horizontal', 785, 1010, 1077)
-        
+        Backgrounds.new_wall('Horizontal', 785, 1010, 1077)        
         Backgrounds.new_wall('Vertical', 1077, 741, 785)
         Backgrounds.new_wall('Horizontal', 741, 1077, 1212)
         Backgrounds.new_wall('Vertical', 1212, 654, 741)
-        Backgrounds.new_wall('Horizontal', 654, 943, 1212)
-        
+        Backgrounds.new_wall('Horizontal', 654, 943, 1212)        
         Backgrounds.new_wall('Vertical', 943, 567, 610)
         Backgrounds.new_wall('Horizontal', 567, 808, 943)
         Backgrounds.new_wall('Vertical', 808, 392, 523)
-        Backgrounds.new_wall('Horizontal', 392, 808, 943)
-        
+        Backgrounds.new_wall('Horizontal', 392, 808, 943)        
         Backgrounds.new_wall('Vertical', 943, 261, 349)
         Backgrounds.new_wall('Horizontal', 261, 875, 943)
         Backgrounds.new_wall('Vertical', 875, 218, 218)
-        Backgrounds.new_wall('Horizontal', 218, 606, 875)
-        
+        Backgrounds.new_wall('Horizontal', 218, 606, 875)        
         Backgrounds.new_wall('Vertical', 606, 218, 218)
         Backgrounds.new_wall('Horizontal', 261, 538, 606)
         Backgrounds.new_wall('Vertical', 538, 261, 349)
-        Backgrounds.new_wall('Horizontal', 392, 538, 673)
-        
+        Backgrounds.new_wall('Horizontal', 392, 538, 673)        
         Backgrounds.new_wall('Vertical', 673, 392, 523)
         Backgrounds.new_wall('Horizontal', 567, 538, 673)
         Backgrounds.new_wall('Vertical', 538, 480, 523)
         Backgrounds.new_wall('Horizontal', 480, 202, 538)
+        
+        #dungeon
+        
+        Backgrounds.new_wall('Vertical', 2819, 0, 375)
+        Backgrounds.new_wall('Horizontal', 0, 2819, 3126)
+        Backgrounds.new_wall('Vertical', 3126, 0, 375)
+        Backgrounds.new_wall('Horizontal', 417, 3024, 3126)
+        
+        Backgrounds.new_wall('Vertical', 3024, 417, 500)
+        Backgrounds.new_wall('Horizontal', 542, 3024, 3075)
+        Backgrounds.new_wall('Vertical', 3075, 584, 626)
+        Backgrounds.new_wall('Horizontal', 667, 3075, 3280) 
+        
+        Backgrounds.new_wall('Vertical', 3280, 667, 793)
+        Backgrounds.new_wall('Horizontal', 834, 3075, 3280)
+        Backgrounds.new_wall('Vertical', 3075, 834, 918)
+        Backgrounds.new_wall('Horizontal', 960, 2819, 3075)
+        
+        Backgrounds.new_wall('Vertical', 2870, 834, 918)
+        Backgrounds.new_wall('Horizontal', 834, 2768, 2870)
+        Backgrounds.new_wall('Vertical', 2768, 834, 918)
+        Backgrounds.new_wall('Horizontal', 960, 2307, 2768)
+        
+        Backgrounds.new_wall('Vertical', 2307, 584, 918)
+        Backgrounds.new_wall('Horizontal', 584, 2051, 2307)
+        Backgrounds.new_wall('Vertical', 2051, 292, 542)
+        Backgrounds.new_wall('Horizontal', 292, 2000, 2051)
+        
+        Backgrounds.new_wall('Vertical', 2000, 125, 250)
+        Backgrounds.new_wall('Horizontal', 125, 2000, 2460)
+        Backgrounds.new_wall('Vertical', 2460, 125, 333)
+        Backgrounds.new_wall('Horizontal', 375, 2460, 2614)
+        
+        Backgrounds.new_wall('Vertical', 2614, 375, 500)
+        Backgrounds.new_wall('Horizontal', 542, 2614, 2768)
+        Backgrounds.new_wall('Vertical', 2768, 542, 626)
+        Backgrounds.new_wall('Horizontal', 667, 2768, 2870)
+        
+        Backgrounds.new_wall('Vertical', 2870, 542, 626)
+        Backgrounds.new_wall('Horizontal', 542, 2870, 2921)
+        Backgrounds.new_wall('Vertical', 2921, 417, 500)                   
+        Backgrounds.new_wall('Horizontal', 417, 2819, 2921)
+        
+        Backgrounds.new_wall('Vertical', 2409, 709, 751)
+        Backgrounds.new_wall('Horizontal', 793, 2409, 2665)
+        Backgrounds.new_wall('Vertical', 2665, 709, 751)                   
+        Backgrounds.new_wall('Horizontal', 709, 2409, 2665)
+        
+        Backgrounds.new_wall('Vertical', 2204, 250, 375)
+        Backgrounds.new_wall('Horizontal', 417, 2204, 2358)
+        Backgrounds.new_wall('Vertical', 2358, 250, 375)
+        Backgrounds.new_wall('Horizontal', 250, 2204, 2358)
         
     def check_collision(pos, hitbox, character):
         collisionDir = []
@@ -1086,36 +1169,71 @@ class Backgrounds:
         
         # Check vertical walls
         # Check vertical walls
-        for wall in verticalGrid:
-            if wall[2] == 'Vertical':  # Check if the wall is impassable
-                wall_x = wall[0][0]  # x-coordinate of the vertical wall
-                wall_y1 = wall[0][1]  # y-coordinate of the top start point
-                wall_y2 = wall[1][1]  # y-coordinate of the bottom end point
-
-                # Check if the player's new position overlaps with the wall
-                if (wall_x < pos[0] < wall_x + var[0] and
-                    wall_y1 - var[1] < pos[1] < wall_y2) and not('left' in collisionDir):                               
-                    collisionDir.append('left') # Collision detected
-
-                if (wall_x - var[0] < pos[0] < wall_x and
-                    wall_y1 - var[1] < pos[1] < wall_y2) and not('right' in collisionDir):               
-                    collisionDir.append('right')
-
-        for wall in horizontalGrid:
-            if wall[2] == 'Horizontal':  # Check if the wall is impassable
-                wall_y = wall[0][1]  # y-coordinate of the horizontal wall
-                wall_x1 = wall[0][0]  # x-coordinate of the left start point
-                wall_x2 = wall[1][0]  # x-coordinate of the right end point
+        if area == 1:    
+            for wall in verticalGridMap1:
+                if wall[2] == 'Vertical':  # Check if the wall is impassable
+                    wall_x = wall[0][0]  # x-coordinate of the vertical wall
+                    wall_y1 = wall[0][1]  # y-coordinate of the top start point
+                    wall_y2 = wall[1][1]  # y-coordinate of the bottom end point
 
                     # Check if the player's new position overlaps with the wall
-                if (wall_y <= pos[1] + 10 <= wall_y + var[0] and                
-                    wall_x1 - 10 <= pos[0] <= wall_x2 + 10) and not('up' in collisionDir):
-                    collisionDir.append('up')  # Collision detected
+                    if (wall_x < pos[0] < wall_x + var[0] and
+                        wall_y1 - var[1] < pos[1] < wall_y2) and not('left' in collisionDir):                               
+                        collisionDir.append('left') # Collision detected
 
-                if (wall_y - var[0] < pos[1] + var[1] - 5 < wall_y and 
-                    wall_x1  - 10< pos[0] < wall_x2+10) and not('down' in collisionDir):
-                    collisionDir.append('down')  # Collision detected
+                    if (wall_x - var[0] < pos[0] < wall_x and
+                        wall_y1 - var[1] < pos[1] < wall_y2) and not('right' in collisionDir):               
+                        collisionDir.append('right')
 
+            for wall in horizontalGridMap1:
+                if wall[2] == 'Horizontal':  # Check if the wall is impassable
+                    wall_y = wall[0][1]  # y-coordinate of the horizontal wall
+                    wall_x1 = wall[0][0]  # x-coordinate of the left start point
+                    wall_x2 = wall[1][0]  # x-coordinate of the right end point
+
+                        # Check if the player's new position overlaps with the wall
+                    if (wall_y <= pos[1] + 10 <= wall_y + var[0] and                
+                        wall_x1 - 10 <= pos[0] <= wall_x2 + 10) and not('up' in collisionDir):
+                        collisionDir.append('up')  # Collision detected
+
+                    if (wall_y - var[0] < pos[1] + var[1] - 5 < wall_y and 
+                        wall_x1  - 10< pos[0] < wall_x2+10) and not('down' in collisionDir):
+                        collisionDir.append('down')  # Collision detected
+        
+        if area == 2:
+            for wall in verticalGridMap2:
+                if wall[2] == 'Vertical':  # Check if the wall is impassable
+                    wall_x = wall[0][0]  # x-coordinate of the vertical wall
+                    wall_y1 = wall[0][1]  # y-coordinate of the top start point
+                    wall_y2 = wall[1][1]  # y-coordinate of the bottom end point
+
+                    # Check if the player's new position overlaps with the wall
+                    if (wall_x < pos[0] < wall_x + var[0] and
+                        wall_y1 - var[1] < pos[1] < wall_y2) and not('left' in collisionDir):                               
+                        collisionDir.append('left') # Collision detected
+
+                    if (wall_x - var[0] < pos[0] < wall_x and
+                        wall_y1 - var[1] < pos[1] < wall_y2) and not('right' in collisionDir):               
+                        collisionDir.append('right')
+
+                        
+            for wall in horizontalGridMap2:
+                if wall[2] == 'Horizontal':  # Check if the wall is impassable
+                    wall_y = wall[0][1]  # y-coordinate of the horizontal wall
+                    wall_x1 = wall[0][0]  # x-coordinate of the left start point
+                    wall_x2 = wall[1][0]  # x-coordinate of the right end point
+
+                        # Check if the player's new position overlaps with the wall
+                    if (wall_y <= pos[1] + 10 <= wall_y + var[0] and                
+                        wall_x1 - 10 <= pos[0] <= wall_x2 + 10) and not('up' in collisionDir):
+                        collisionDir.append('up')  # Collision detected
+
+                    if (wall_y - var[0] < pos[1] + var[1] - 5 < wall_y and 
+                        wall_x1  - 10< pos[0] < wall_x2+10) and not('down' in collisionDir):
+                        collisionDir.append('down')  # Collision detected
+                        
+                        
+        
         if character == 'enemy':
             for enemy in enemies:
                 if hitbox == enemy.hitbox():
@@ -1183,6 +1301,7 @@ class Keys:
             player.keys["j"] = False
 
 class Update:  
+    
     def update():
         global SCORE
         """Update player movement and animation."""
@@ -1192,11 +1311,14 @@ class Update:
             NPC.update_animation()
         for enemy in enemies:    
             enemy.update_animation(player)
+           
             if enemy.state == "dead" and enemy.frame_index == 0:
+                
                 enemies.remove(enemy)
                 SCORE += 10
         for ranged_enemy in ranged_enemies:    
             ranged_enemy.update_animation(player)
+            #print(ranged_enemy.pos)
             if ranged_enemy.state == "dead" and ranged_enemy.frame_index == 0:
                 ranged_enemies.remove(ranged_enemy)
                 SCORE += 50
@@ -1205,69 +1327,79 @@ class Update:
             
         for exmplosion in exploding_objects:
             exmplosion.update()
-        #print (enemies)
-        if enemies == []:
+        
+        if enemies == [] and ranged_enemies == []:
             new_wave()
+        
             
         healing_potion.update()
                 
                 
             
     def draw(canvas):
-        global area, map_change, MAP_1_TELEPORT, MAP_2_TELEPORT
+        global area, map_change, MAP_1_TELEPORT, MAP_2_TELEPORT, MAP_1, MAP_2
         """Draw game scene."""
         Update.update()
 
         # Calculate camera position
+        #if area == 2:
+            #camera_x = (player.pos[0] + 2000) - WIDTH // 2
+        #else:
+        if player.pos[0] > 1600:
+            area = 2
+        else:
+            area = 1
+            
         camera_x = player.pos[0] - WIDTH // 2
-        camera_y = player.pos[1] - HEIGHT // 2  
+        
+        
+        camera_y = player.pos[1] - HEIGHT // 2
+        
 
         fixed_x = max(0, min(camera_x, BACKGROUND_WIDTH - WIDTH))
         fixed_y = max(0, min(camera_y, BACKGROUND_HEIGHT - HEIGHT))
 
         if area == 1:
             Update.draw_image(canvas, BACKGROUND, fixed_x, fixed_y, scale=3)
-        
+            canvas.draw_text("Floating island", (10, 40), 12, 'Black')
         elif area == 2: 
-            Update.draw_image(canvas, BACKGROUND_2, fixed_x, fixed_y, scale=3)
-
-        # Draw maps
-        if area == 1:
-            Update.draw_image(canvas, MAP_1, camera_x, camera_y, scale=1)
-            canvas.draw_text("Floating island", (20, 20), 12, 'Black')
+            Update.draw_image(canvas, BACKGROUND_2, fixed_x -2000, fixed_y, scale=3)
+            canvas.draw_text("Dungeon Annexe", (10, 40), 12, 'Red')
+                
         
-        if area == 2:    
-            Update.draw_image(canvas, MAP_2, camera_x, camera_y, scale=1)
-            canvas.draw_text("Dungeon Annexe", (20, 20), 12, 'Red')
-            
-        if area == 3:
-            Update.draw_image(canvas, MAP_3, camera_x, camera_y, scale=1)
-            canvas.draw_text("Dungeon Basement", (20, 20), 12, 'Red')
-            
-        # Changing maps / areas
+        Update.draw_image(canvas, MAP_1, camera_x, camera_y, scale=1)                 
+        Update.draw_image(canvas, MAP_2, camera_x-2000,camera_y, scale=1)
+        
+        if area == 1:
+            canvas.draw_text("Floating island", (10, 40), 12, 'Black')
+        elif area == 2:
+            canvas.draw_text("Dungeon Annexe", (10, 40), 12, 'Red')    
+          
+        MAP_1_TELEPORT = [937.7056274847728, 818.0990257669727]
+        MAP_2_TELEPORT = [987.4695167279529, 19.60660171779881]
+        RETURN_MAP_1 = [945.132034355966, 811.1320343559634]
+        RETURN_MAP_2 = [987.4695167279529, 24.60660171779881]
+        
+        #Changing maps / areas
         if area == 1 and player.pos[1] >= MAP_1_TELEPORT[1]:
             area = 2
-            player.pos[0] = MAP_2_TELEPORT[0]
-            player.pos[1] = MAP_2_TELEPORT[1]
+            #print(RETURN_MAP_2[0])
+            #print(RETURN_MAP_2[1])
+            player.pos[0] = RETURN_MAP_2[0] + 2000
+            player.pos[1] = RETURN_MAP_2[1]
             map_change = True
             
         elif area == 2 and player.pos[1] <= MAP_2_TELEPORT[1]:
             area = 1
-            player.pos[0] = RETURN_MAP_1[0]
-            player.pos[1] = RETURN_MAP_1[1]
+            #print(RETURN_MAP_1[0])
+            #print(RETURN_MAP_1[1])
+            player.pos[0] = RETURN_MAP_1[0] 
+            player.pos[1] = RETURN_MAP_1[1] 
             map_change = False
             
-        if area == 2 and player.pos[0] >= MAP_2_X_TELEPORT[0]:
-            area = 3
-            player.pos[0] = MAP_3_TELEPORT[0]
-            player.pos[1] = MAP_3_TELEPORT[1]
-            map_change = True
+        
             
-        elif area == 3 and player.pos[0] <= MAP_3_TELEPORT[0]:
-            area = 2
-            player.pos[0] = RETURN_MAP_2_X[0]
-            player.pos[1] = RETURN_MAP_2_X[1]
-            map_change = True
+        
             
             
         # Draw player
@@ -1280,20 +1412,22 @@ class Update:
         
         # Draw enemies
         for enemy in enemies:
-            if map_change == True:
-                enemy.draw(canvas, camera_x, camera_y)
-        
+            #print (enemy)
+            #if map_change == True:
+            enemy.draw(canvas, camera_x, camera_y)
+        #print (ranged_enemies)
         for ranged_enemy in ranged_enemies:
-            if map_change == True:
-                ranged_enemy.draw(canvas, camera_x, camera_y)
+            
+            #if map_change == True:
+            ranged_enemy.draw(canvas, camera_x, camera_y)
                 
         
         for fireball in bouncing_objects:
-            if map_change == True:
+            #if map_change == True:
                 fireball.drawSprite(canvas, camera_x, camera_y)
             
         for explosion in exploding_objects:
-            if map_change == True:
+            #if map_change == True:
                 explosion.drawExplosion(canvas, camera_x, camera_y)    
             
         healing_potion.draw(canvas, camera_x, camera_y)
@@ -1309,6 +1443,7 @@ class Update:
         if img_width <= 0 or img_height <= 0:
             canvas.draw_text("Loading Image...", (WIDTH // 2 - 60, HEIGHT // 2), 20, "White")
             return
+        
         
         canvas.draw_image(image,
             (img_width / 2, img_height / 2),  # Image center
@@ -1336,62 +1471,46 @@ class Update:
     def click(canvas):
         this = 0
 
-def check_collision(pos):
-    touchingWalls = []
-    
-    # Check vertical walls
-    for wall in verticalGrid:
-        if wall[2] == 'Vertical':  # Check if the wall is impassable
-            wall_x = wall[0][0]  # x-coordinate of the vertical wall
-            wall_y1 = wall[0][1]  # y-coordinate of the top start point
-            wall_y2 = wall[1][1]  # y-coordinate of the bottom end point
-            
-            # Check if the player's new position overlaps with the wall
-            if (wall_x < pos[0] < wall_x + 15 and
-                wall_y1 - 45 < pos[1] < wall_y2):               
-                
-                touchingWalls.append('left') # Collision detected
-            
-            if (wall_x - 15 < pos[0] < wall_x and
-                wall_y1 - 45 < pos[1] < wall_y2):               
-                touchingWalls.append('right')
-                        
-            
-  
-    for wall in horizontalGrid:
-        if wall[2] == 'Horizontal':  # Check if the wall is impassable
-            wall_y = wall[0][1]  # y-coordinate of the horizontal wall
-            wall_x1 = wall[0][0]  # x-coordinate of the left start point
-            wall_x2 = wall[1][0]  # x-coordinate of the right end point
 
-                # Check if the player's new position overlaps with the wall
-            if (wall_y  < pos[1] + 40 < wall_y + 10 and
-                wall_x1 - 10 < pos[0] < wall_x2 + 10):
-                touchingWalls.append('up')  # Collision detected
-            
-            if (wall_y - 10 < pos[1] +40 < wall_y and
-                wall_x1 - 10 < pos[0] < wall_x2 + 10):
-                touchingWalls.append('down')  # Collision detected
-    
-    return touchingWalls
 
 def new_wave():
     #print("new wave")
-    global player, enemies, WAVE
+    global player, enemies, WAVE, ranged_enemies
     WAVE += 1
     camera_x = player.pos[0] - WIDTH // 2
     camera_y = player.pos[1] - HEIGHT // 2 
-    enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
-                   HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
+    print(2460 - WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2), 500 -HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2))
+    
+    enemy_start = [2460, 500]
     enemies = []
     amount_of_enemies = 3 * WAVE
-
+    ranged_enemies = []
+    amount_of_ranged = 1 * WAVE
+    
     # Spawns enemies randomly around the map
     for i in range(amount_of_enemies):
-        x_variation = random.randint(100, 300) #CHANGE FOR WHERE YOU WANT ENEMIES TO SPAWN
+        
+        x_variation = random.randint(0, 100)
         y_variation = random.randint(0, 100)
+        print(x_variation ,y_variation)
+            
         enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
         enemies.append(enemy)
+        
+    
+    for i in range(amount_of_ranged):
+        
+        
+        x_variation = random.randint(0, 200)
+        y_variation = random.randint(0, 200)
+            
+        print(x_variation ,y_variation)
+            
+        
+        enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+        ranged_enemies.append(enemy)
+    
+    
     healing_potion.activate()
         
 def initialize_game():
@@ -1405,7 +1524,7 @@ def initialize_game():
     camera_x = player.pos[0] - WIDTH // 2
     camera_y = player.pos[1] - HEIGHT // 2 
 
-    # Initialize enemies
+    #Initialize enemies
     enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
                    HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
     enemies = []
@@ -1420,15 +1539,27 @@ def initialize_game():
     
     
     for i in range(amount_of_ranged):
-        x_variation = random.randint(100, 300)
-        y_variation = random.randint(0, 100)
+        if area == 1:
+            x_variation = random.randint(350, 650)
+            y_variation = random.randint(300, 400)
+        elif area == 2:
+            x_variation = random.randint(417, 584)
+            y_variation = random.randint(2307, 2614)
+        else:
+            print("error")
         enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
         ranged_enemies.append(enemy)
         
     # Spawns enemies randomly around the map
     for i in range(amount_of_enemies):
-        x_variation = random.randint(100, 300)
-        y_variation = random.randint(0, 100)
+        if area == 1:
+            x_variation = random.randint(350, 650)
+            y_variation = random.randint(300, 400)
+        elif area == 2:
+            x_variation = random.randint(417, 584)
+            y_variation = random.randint(2307, 2614)
+        else:
+            print("error")
         enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
         enemies.append(enemy)
 

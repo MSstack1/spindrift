@@ -36,7 +36,7 @@ BACKGROUND_MUSIC = simplegui.load_sound("http://commondatastorage.googleapis.com
 EXPLOSION_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n8lrksp0as7maf5v7xg0k/explosion-312361.mp3?rlkey=l3yago6kmsh2utwey48lkdo0h&st=d2bdyxza")
 POTION_DRINKING_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/n76nsgjxmyyr7jkjzrufi/085594_potion-35983.mp3?rlkey=l8glwgs6nwye5av1og8bbntv9&st=sfcxevjp")
 PLAYER_ATTACK_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/5jtk6obferdvbsi9tck6x/audiomass-output.mp3?rlkey=9s6kqrb3zlvjy03f5unvioega&st=veueqnuo")
-CASTING_FIREBALL_EFFECT = ("https://dl.dropboxusercontent.com/scl/fi/2bql0zhkx70218lyg0hne/magic-spell-6005.mp3?rlkey=jy9xq9mf5p0gqa8n5a1vqmk1z&st=n4jjw4j6")
+CASTING_FIREBALL_EFFECT = simplegui.load_sound("https://dl.dropboxusercontent.com/scl/fi/2bql0zhkx70218lyg0hne/magic-spell-6005.mp3?rlkey=jy9xq9mf5p0gqa8n5a1vqmk1z&st=n4jjw4j6")
 
 # Loading sprites and animations (player and enemy)
 NPC_IMAGE = simplegui.load_image("https://i.imgur.com/wU60Hb7.png")
@@ -778,6 +778,7 @@ class bouncingObject:
             self.sprite_height = 106
             self.exploding = True
             exploding_objects.append(self)
+            EXPLOSION_EFFECT.set_volume(0.5)
             EXPLOSION_EFFECT.play()
             
     
@@ -926,11 +927,11 @@ class RangedEnemy:
             direction[1] = (direction[1] / magnitude) * 2.5    
        
         if (distance < 200 and self.attack_cooldown <= 0):
-            fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 5)
+            fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 3)
             bouncing_objects.append(fireball)
             self.state = "attack"
-            #print(CASTING_FIREBALL_EFFECT)
-            #CASTING_FIREBALL_EFFECT.play()
+            CASTING_FIREBALL_EFFECT.set_volume(0.15)
+            CASTING_FIREBALL_EFFECT.play()
             self.attack_cooldown = 270
             
         self.attack_cooldown -= 1
@@ -1597,7 +1598,6 @@ def game_reset():
 frame = simplegui.create_frame("Animated Player", WIDTH, HEIGHT)
 frame.set_draw_handler(Welcome.draw)
 frame.set_mouseclick_handler(Welcome.welcome_click)
-frame.add_button("Test restart", game_reset, 150)
 
 # Start background music
 BACKGROUND_MUSIC.set_volume(0.25)

@@ -185,7 +185,7 @@ class Player:
         
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
-	# Update player animations 
+    # Update player animations 
     def update_animation(self):
         """Update frame index for animation."""
         if self.hurt == True:
@@ -572,7 +572,7 @@ class Enemy:
                 self.frame_timer = 0
                 self.frame_index = (self.frame_index + 1) % FRAME_COUNT
 
-	
+    
     def draw(self, canvas, camera_x, camera_y):
         """Draw enemy sprite."""
         if self.state == "dead" and self.facing_right:
@@ -864,13 +864,13 @@ class RangedEnemy:
             if self.frame_timer >= 10:
                 self.frame_timer = 0
                 self.frame_index = (self.frame_index + 1) % RANGED_ENEMY_ATTACK_FRAME_COUNT
-				# Update idle of animations
+                # Update idle of animations
                 if self.frame_index == 0:                        
                                                                     
                         self.state = 'idle'
                         self.frame_index = 0
         # Update rest of animations (in case adding new)
-    	else:
+        else:
             self.frame_timer += 1
             if self.frame_timer >= 10:
                 self.frame_timer = 0
@@ -1146,7 +1146,7 @@ class Backgrounds:
                     # Check overlaping with vertical walls
                     if (wall_x < pos[0] < wall_x + var[0] and
                         wall_y1 - var[1] < pos[1] < wall_y2) and not('left' in collisionDir):                               
-                        collisionDir.append('left') d
+                        collisionDir.append('left') 
 
                     if (wall_x - var[0] < pos[0] < wall_x and
                         wall_y1 - var[1] < pos[1] < wall_y2) and not('right' in collisionDir):               
@@ -1253,7 +1253,7 @@ class Update:
         for enemy in enemies:    
             enemy.update_animation(player)
            
-        	# Score for every dead enemy
+            # Score for every dead enemy
             if enemy.state == "dead" and enemy.frame_index == 0:
                 
                 enemies.remove(enemy)

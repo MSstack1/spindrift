@@ -55,7 +55,6 @@ class NPC:
             "HELP ME!",
             "Hello sir! Please may you clean my garden!",
             "There's tons of skeletons! I hate skeletons!!",
-            "For every one you 'clean-up' I'll pay you 10 gold!",
             "I think theres some on the otherside of the garden!",
             "Have a go at 'cleaning them up'",
             "I will provide healing potions if it helps",
@@ -670,6 +669,7 @@ class bouncingObject:
         self.exploding = False
         self.row_explosion = 0
         self.col_explosion = 0
+        self.speed_factor = 0.9985
     
     def coll_check(self):
         
@@ -724,6 +724,9 @@ class bouncingObject:
             self.pos.add(self.vel)
             self.check_hit()
             
+            self.vel.x = max(abs(self.vel.x) * self.speed_factor, 0.5) * (1 if self.vel.x > 0 else -1)
+            self.vel.y = max(abs(self.vel.y) * self.speed_factor, 0.5) * (1 if self.vel.y > 0 else -1)
+            
 
             self.frame_counter += 1
             if self.frame_counter >= self.animation_speed:
@@ -746,10 +749,6 @@ class bouncingObject:
         """Draws the fireball using the sprite sheet."""
         
         hitbox = self.hitbox()
-        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
-        #canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
-        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
-        #canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
         
         frame_x = self.current_frame * self.sprite_width
         
@@ -835,11 +834,11 @@ class RangedEnemy:
             self.pos[0] += 15
         magnitude = (direction[0]**2 + direction[1]**2) ** 0.5
         if magnitude != 0:  # Avoid division by zero
-            direction[0] = (direction[0] / magnitude) * 2.5
-            direction[1] = (direction[1] / magnitude) * 2.5    
+            direction[0] = (direction[0] / magnitude) * 3.5
+            direction[1] = (direction[1] / magnitude) * 3.5    
        
-        if (distance < 200 and self.attack_cooldown <= 0):
-            fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 3)
+        if (distance < 250 and self.attack_cooldown <= 0):
+            fireball = bouncingObject((self.pos[0],self.pos[1]), direction, 10, 4)
             bouncing_objects.append(fireball)
             self.state = "attack"
             CASTING_FIREBALL_EFFECT.set_volume(0.15)
@@ -1447,8 +1446,8 @@ class Game:
     def initialize_constants():
         global WIDTH, HEIGHT, PLAYER_SPEED, FRAME_COUNT, NPC_FRAME_COUNT, ATTACK_FRAME_COUNT, RANGED_ENEMY_ATTACK_FRAME_COUNT, PLAYER_HURT_FRAME_COUNT
         global DEAD_FRAME_COUNT, FRAME_DELAY, SPRITE_WIDTH, SPRITE_HEIGHT, DISPLAY_SIZE, DEATH_SCREEN, LIVES, SCORE, HIGH_SCORE, WAVE
-        WIDTH = 500
-        HEIGHT = 500
+        WIDTH = 600
+        HEIGHT = 600
         PLAYER_SPEED = 5
         FRAME_COUNT = 6
         NPC_FRAME_COUNT = 5

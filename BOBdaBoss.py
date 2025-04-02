@@ -783,10 +783,10 @@ class bouncingObject:
     
     def hitbox(self):
    
-        left = self.pos.x - self.radius - 5
-        right = self.pos.x + self.radius + 5
-        top = self.pos.y - self.radius - 5
-        bottom = self.pos.y + self.radius + 5
+        left = self.pos.x - self.radius - 3
+        right = self.pos.x + self.radius + 3
+        top = self.pos.y - self.radius - 3
+        bottom = self.pos.y + self.radius + 3
         
         return [left, top, right, bottom]
     

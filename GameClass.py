@@ -1440,8 +1440,8 @@ class Game:
                 enemies.append(enemy)
 
             for i in range(amount_of_ranged):
-                x_variation = random.randint(0, 180)
-                y_variation = random.randint(0, 180)
+                x_variation = random.randint(0, 100)
+                y_variation = random.randint(0, 100)
 
                 enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
                 ranged_enemies.append(enemy)
@@ -1509,8 +1509,8 @@ class Game:
 
         # Spawns range enemies
         for i in range(amount_of_ranged):        
-            x_variation = random.randint(350, 650)
-            y_variation = random.randint(300, 400)
+            x_variation = random.randint(400, 600)
+            y_variation = random.randint(300, 380)
 
             enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
             ranged_enemies.append(enemy)
@@ -1518,8 +1518,8 @@ class Game:
         # Spawns enemies
         for i in range(amount_of_enemies):
 
-            x_variation = random.randint(350, 650)
-            y_variation = random.randint(300, 400)
+            x_variation = random.randint(400, 600)
+            y_variation = random.randint(300, 380)
 
             enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
             enemies.append(enemy)

@@ -5,6 +5,7 @@ import math
 
 class Welcome:
     
+    # Draw all elements of welcome screen
     def draw(canvas):
         global HIGH_SCORE
         Welcome.draw_image(canvas, WELCOME_SCREEN, WIDTH, HEIGHT, 2)
@@ -17,20 +18,22 @@ class Welcome:
         canvas.draw_text("J - ATTACK", (10, 200), 20, "White")
         Welcome.draw_image(canvas, START_BUTTON, 80, 40, 1.25)
         
+        # Display "wasted" picture if player was defeated
         if DEATH_SCREEN:
             Welcome.draw_image(canvas, WASTED, 250, 100, 2)
             canvas.draw_text(f"Score last game: {SCORE}", (10, 40), 20, "White")
             
-            
+    # Handle mouse click on welcome screen
     def welcome_click(pos):
         if ((WIDTH/2 - 40 <= pos[0] <= WIDTH/2 + 40) and (HEIGHT/1.25 - 20 <= pos[1] <= HEIGHT/1.25 + 20)):
+            # Initialise game if button is clicked
             frame.set_draw_handler(Update.draw)
             frame.set_keydown_handler(Keys.keydown)
             frame.set_keyup_handler(Keys.keyup)
             frame.set_mouseclick_handler(Update.click)
             Game.initialize_game()
             
-            
+    # Draw function for images
     def draw_image(canvas, image, size_x, size_y, hight_mod):
 
         image_width = image.get_width()
@@ -80,7 +83,7 @@ class NPC:
     def draw(self, canvas, camera_x, camera_y):
         sprite_image = NPC_IMAGE
         frame_x = (self.frame_index * SPRITE_WIDTH) + (SPRITE_WIDTH / 2)
-        adjusted_x = self.pos[0] - camera_x 
+        adjusted_x = self.pos[0] - camera_x
         adjusted_y = self.pos[1] - camera_y
         
         canvas.draw_image(sprite_image, 
@@ -596,10 +599,7 @@ class Enemy:
         
         
         hitbox = self.hitbox()
-        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[1] - camera_y), 2, 'Red')  # Top edge
-        #canvas.draw_line((hitbox[0] - camera_x, hitbox[3] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Left edge
-        #canvas.draw_line((hitbox[0] - camera_x, hitbox[1] - camera_y), (hitbox[0] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Right edge
-        #canvas.draw_line((hitbox[2] - camera_x, hitbox[1] - camera_y), (hitbox[2] - camera_x, hitbox[3] - camera_y), 2, 'Red')  # Bottom edge
+        
         
         bar_width = 50
         bar_height = 5
@@ -669,7 +669,7 @@ class bouncingObject:
         self.exploding = False
         self.row_explosion = 0
         self.col_explosion = 0
-        self.speed_factor = 0.9985
+        self.speed_factor = 0.998
     
     def coll_check(self):
         
@@ -803,8 +803,8 @@ class RangedEnemy:
         self.AP = AP
         self.DM = DM
         self.attack = False
-        self.attack_cooldown = 0  # Cooldown timer
-        self.attack_delay = 180  # Frames before enemy can attack again
+        self.attack_cooldown = 0  
+        self.attack_delay = 180  
         self.counter_a = 3
         self.counter_b = 5
         self.notMoving = True
@@ -950,11 +950,11 @@ class Backgrounds:
                 # Calculate points with 2000 offset on x-axis
                 p1 = (2000 + x * MAP_1_WIDTH/25, y * MAP_1_HEIGHT/23)
                 p2 = (2000 + x * MAP_1_WIDTH/25, (y + 1) * MAP_1_HEIGHT/23)
-                verticalGridMap2.append((p1, p2, 0, "None"))  # Added type identifier
+                verticalGridMap2.append((p1, p2, 0, "None")) 
 
         # Horizontal lines for Map 2 (positioned at x=2000)
-        for x in range(24):  # Note: Changed to 26 to match vertical count
-            for y in range(25):  # Note: Changed to 24 to match horizontal count
+        for x in range(24):  
+            for y in range(25):  
                 # Calculate points with 2000 offset on x-axis
                 p1 = (2000 + y * MAP_1_WIDTH/25, x * MAP_1_HEIGHT/23)
                 p2 = (2000 + (y + 1) * MAP_1_WIDTH/25, x * MAP_1_HEIGHT/23)
@@ -966,19 +966,19 @@ class Backgrounds:
             if side == 'Vertical':           
                 if ((constant - 5 <= verticalGridMap1[x][0][0] <= constant + 5) and (beginning-5 <= verticalGridMap1[x][0][1] <= end +5)):
                     verticalGridMap1[x] = (verticalGridMap1[x][0], verticalGridMap1[x][1], side, "Island")                
-                    #print(verticalGridMap1[x], "SUCCESS")
+                    
         
         for x in range(len(horizontalGridMap1)):            
             if side == 'Horizontal':            
                 if ((constant - 1 < horizontalGridMap1[x][0][1] < constant + 1) and (beginning <= horizontalGridMap1[x][0][0] <= end)):
                     horizontalGridMap1[x] = (horizontalGridMap1[x][0], horizontalGridMap1[x][1], side, "Island")
-                    #print(horizontalGridMap1[x], "SUCCESS")
+                    
         
         for x in range(len(verticalGridMap2)):
             if side == 'Vertical':            
                 if ((constant - 5 <= verticalGridMap2[x][0][0] <= constant + 5) and (beginning-5 <= verticalGridMap2[x][0][1] <= end +5)):
                     verticalGridMap2[x] = (verticalGridMap2[x][0], verticalGridMap2[x][1], side, "Dungeon")                
-                    #print(verticalGridMap2[x], "SUCCESS")
+                    
 
                     
         for x in range(len(horizontalGridMap2)):            
@@ -1094,7 +1094,7 @@ class Backgrounds:
         
     def check_collision(pos, hitbox, character):
         collisionDir = []
-        prime_rect = hitbox # setting and getting hitboxes
+        prime_rect = hitbox # Setting and getting hitboxes
         player_rect = player.hitbox()
         
         var = [10,10] if character == "projectile" else [15, 45]
@@ -1237,33 +1237,42 @@ class Update:
     def update():
         global SCORE
         """Update player movement and animation."""
+        # Update player
         player.move()
         player.update_animation()
+        
+        # Update NPC
         for NPC in NPCs:
             NPC.update_animation()
+            
+        # Update every enemy instance
         for enemy in enemies:    
             enemy.update_animation(player)
            
+        	# Score for every dead enemy
             if enemy.state == "dead" and enemy.frame_index == 0:
                 
                 enemies.remove(enemy)
                 SCORE += 10
+        # Update every ranged enemy instance
         for ranged_enemy in ranged_enemies:    
             ranged_enemy.update_animation(player)
             
+            # Score for every dead ranged enemy
             if ranged_enemy.state == "dead" and ranged_enemy.frame_index == 0:
                 ranged_enemies.remove(ranged_enemy)
                 SCORE += 50
+        # Update every projectile instance
         for projectile in bouncing_objects:
             projectile.update()
-            
-        for exmplosion in exploding_objects:
-            exmplosion.update()
-        
+        # Update every explosion instance
+        for explosion in exploding_objects:
+            explosion.update()
+        # Launch a new wave if no enemies left.
         if enemies == [] and ranged_enemies == []:
             Game.new_wave()
         
-            
+        # Update healing potion
         healing_potion.update()
                 
                 
@@ -1273,35 +1282,35 @@ class Update:
         """Draw game scene."""
         Update.update()
 
-        # Calculate camera position
-        #if area == 2:
-            #camera_x = (player.pos[0] + 2000) - WIDTH // 2
-        #else:
+        # Change areas (maps)
         if player.pos[0] > 1600:
             area = 2
         else:
             area = 1
             
+        # Global camera position
         camera_x = player.pos[0] - WIDTH // 2
-        
-        
         camera_y = player.pos[1] - HEIGHT // 2
         
 
-        fixed_x = max(0, min(camera_x, BACKGROUND_WIDTH - WIDTH))
-        fixed_y = max(0, min(camera_y, BACKGROUND_HEIGHT - HEIGHT))
+        # Create parallax effect (background moves slower)
+        parallax_x = camera_x  * 0.5  
+        parallax_y = camera_y * 0.5 - 200
 
+        # Draw the background with a slower movement
         if area == 1:
-            Update.draw_image(canvas, BACKGROUND, fixed_x, fixed_y, scale=3)
+            Update.draw_image(canvas, BACKGROUND, parallax_x, parallax_y, scale=2.2)
             canvas.draw_text("Floating island", (10, 40), 12, 'Black')
-        elif area == 2: 
-            Update.draw_image(canvas, BACKGROUND_2, fixed_x -2000, fixed_y, scale=3)
+
+        elif area == 2:
+            Update.draw_image(canvas, BACKGROUND_2, parallax_x - 2000, parallax_y, scale=3)
             canvas.draw_text("Dungeon Annexe", (10, 40), 12, 'Red')
                 
-        
+        # Draw a map
         Update.draw_image(canvas, MAP_1, camera_x, camera_y, scale=1)                 
         Update.draw_image(canvas, MAP_2, camera_x-2000,camera_y, scale=1)
         
+        # Update name of the area
         if area == 1:
             canvas.draw_text("Floating island", (10, 40), 12, 'Black')
         elif area == 2:
@@ -1326,11 +1335,7 @@ class Update:
             player.pos[0] = RETURN_MAP_1[0] 
             player.pos[1] = RETURN_MAP_1[1] 
             map_change = False
-            
-        
-            
-        
-            
+          
             
         # Draw player
         player.draw(canvas, camera_x, camera_y)
@@ -1473,6 +1478,67 @@ class Game:
         area = 1
         map_change = False
         
+        # Starting or restarting the game
+    def initialize_game():
+        global player, enemies, ranged_enemies, bouncing_objects, exploding_objects, NPCs, WAVE, SCORE, healing_potion
+        SCORE = 0
+        WAVE = 0
+        # Initialize player
+        NPCs = []
+        NPCs.append(NPC([865,745]))
+        player = Player(743, 254, PLAYER_SPEED, 100, "Player 1", 15, 1)
+        camera_x = player.pos[0] - WIDTH // 2
+        camera_y = player.pos[1] - HEIGHT // 2 
+
+        #Initialize enemies and objects
+        enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
+                       HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
+        enemies = []
+        amount_of_enemies = 3
+        ranged_enemies = []
+        amount_of_ranged = 1
+        
+        bouncing_objects = []
+        exploding_objects = []
+        healing_potion = HealingPotion(905, 775)
+
+        # Spawns range enemies
+        for i in range(amount_of_ranged):        
+            x_variation = random.randint(350, 650)
+            y_variation = random.randint(300, 400)
+
+            enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+            ranged_enemies.append(enemy)
+
+        # Spawns enemies
+        for i in range(amount_of_enemies):
+
+            x_variation = random.randint(350, 650)
+            y_variation = random.randint(300, 400)
+
+            enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+            enemies.append(enemy)
+
+        # Create grid, and walls based on it
+        Backgrounds.create_grid()
+        Backgrounds.create_walls()
+    
+
+    # Reset all data of the game and run Welcome screen
+    def game_reset():
+        global DEATH_SCREEN, LIVES, SCORE, HIGH_SCORE
+
+        frame.set_draw_handler(Welcome.draw)
+        frame.set_mouseclick_handler(Welcome.welcome_click)
+        DEATH_SCREEN = True
+        LIVES = 3
+        if SCORE >= HIGH_SCORE:	
+            HIGH_SCORE = SCORE
+
+        enemies.clear()
+        ranged_enemies.clear()
+        bouncing_objects.clear()
+        
     def initialize_images():
         global NPC_IMAGE, IDLE_IMAGE, RUN_IMAGE, HURT_IMAGE, ATTACK_IMAGE, ENEMY_IDLE_IMAGE, ENEMY_RUN_IMAGE, ENEMY_ATTACK_IMAGE, ENEMY_DEATH_IMAGE, FIREBALL_WRIGHT
         global FIREBALL_HIT, RANGED_ENEMY_IDLE, RANGED_ENEMY_ATTACK, RANGED_ENEMY_DEATH, HEALING_POTION, LIVES_IMAGE
@@ -1540,68 +1606,6 @@ class Game:
         MAP_2_HEIGHT = MAP_2.get_height()
         MAP_3_WIDTH = MAP_3.get_width()
         MAP_3_HEIGHT = MAP_3.get_width()
-        
-        
-    def initialize_game():
-        global player, enemies, ranged_enemies, bouncing_objects, exploding_objects, NPCs, WAVE, SCORE, healing_potion
-        SCORE = 0
-        WAVE = 0
-        # Initialize player
-        NPCs = []
-        NPCs.append(NPC([865,745]))
-        player = Player(743, 254, PLAYER_SPEED, 100, "Player 1", 15, 1)
-        camera_x = player.pos[0] - WIDTH // 2
-        camera_y = player.pos[1] - HEIGHT // 2 
-
-        #Initialize enemies
-        enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
-                       HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
-        enemies = []
-        amount_of_enemies = 3
-
-        ranged_enemies = []
-        amount_of_ranged = 1
-
-        bouncing_objects = []
-        exploding_objects = []
-        healing_potion = HealingPotion(905, 775)
-
-
-        for i in range(amount_of_ranged):        
-            x_variation = random.randint(350, 650)
-            y_variation = random.randint(300, 400)
-
-            enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
-            ranged_enemies.append(enemy)
-
-        # Spawns enemies randomly around the map
-        for i in range(amount_of_enemies):
-
-            x_variation = random.randint(350, 650)
-            y_variation = random.randint(300, 400)
-
-            enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
-            enemies.append(enemy)
-
-        # Run all initial set-ups
-        Backgrounds.create_grid()
-        Backgrounds.create_walls()
-    
-
-    
-    def game_reset():
-        global DEATH_SCREEN, LIVES, SCORE, HIGH_SCORE
-
-        frame.set_draw_handler(Welcome.draw)
-        frame.set_mouseclick_handler(Welcome.welcome_click)
-        DEATH_SCREEN = True
-        LIVES = 3
-        if SCORE >= HIGH_SCORE:	
-            HIGH_SCORE = SCORE
-
-        enemies.clear()
-        ranged_enemies.clear()
-        bouncing_objects.clear()
         
 # Initialise global constants
 Game.initialize_constants()

@@ -116,7 +116,7 @@ class Welcome:
             frame.set_keydown_handler(Keys.keydown)
             frame.set_keyup_handler(Keys.keyup)
             frame.set_mouseclick_handler(Update.click)
-            initialize_game()
+            Game.initialize_game()
             
             
     def draw_image(canvas, image, size_x, size_y, hight_mod):
@@ -310,7 +310,7 @@ class Player:
                 
                 self.health = 100
                 if LIVES <= 0:
-                    game_reset()
+                    Game.game_reset()
                 
         
     def attack_move(self):
@@ -1350,7 +1350,7 @@ class Update:
             exmplosion.update()
         
         if enemies == [] and ranged_enemies == []:
-            new_wave()
+            Game.new_wave()
         
             
         healing_potion.update()
@@ -1490,108 +1490,107 @@ class Update:
         this = 0
 
 
+class Game:
+    def new_wave():
+        global player, enemies, WAVE, ranged_enemies
+        WAVE += 1
+        camera_x = player.pos[0] - WIDTH // 2
+        camera_y = player.pos[1] - HEIGHT // 2 
+        print(2460 - WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2), 500 -HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2))
 
-def new_wave():
-    #print("new wave")
-    global player, enemies, WAVE, ranged_enemies
-    WAVE += 1
-    camera_x = player.pos[0] - WIDTH // 2
-    camera_y = player.pos[1] - HEIGHT // 2 
-    print(2460 - WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2), 500 -HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2))
-    
-    if WAVE % 4 != 0:
+        if WAVE % 4 != 0:
+
+            if WAVE % 3 == 1:        
+                enemy_start = [2460, 500]
+            elif WAVE % 3 == 2:        
+                enemy_start = [2971, 740]    
+            elif WAVE % 3 == 0:        
+                enemy_start = [2971, 208]    
+            enemies = []
+            amount_of_enemies = int(1.5 * WAVE)
+            ranged_enemies = []
+            amount_of_ranged = int(0.5 * WAVE)
+
+            # Spawns enemies randomly around the map
+            for i in range(amount_of_enemies):
+                x_variation = random.randint(0, 100)
+                y_variation = random.randint(0, 100)           
+                enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+                enemies.append(enemy)
+
+            for i in range(amount_of_ranged):
+                x_variation = random.randint(0, 180)
+                y_variation = random.randint(0, 180)
+
+                enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+                ranged_enemies.append(enemy)
+        else:
+            enemy_start = [2971, 740]
+            bob = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 3.5, 450, "BOB", 25, 1, player, 0, 0)    
+            enemies.append(bob)
+
+        healing_potion.activate()
         
-        if WAVE % 3 == 1:        
-            enemy_start = [2460, 500]
-        elif WAVE % 3 == 2:        
-            enemy_start = [2971, 740]    
-        elif WAVE % 3 == 0:        
-            enemy_start = [2971, 208]    
+    def initialize_game():
+        global player, enemies, ranged_enemies, bouncing_objects, exploding_objects, NPCs, WAVE, SCORE, healing_potion
+        SCORE = 0
+        WAVE = 0
+        # Initialize player
+        NPCs = []
+        NPCs.append(NPC([865,745]))
+        player = Player(743, 254, PLAYER_SPEED, 100, "Player 1", 15, 1)
+        camera_x = player.pos[0] - WIDTH // 2
+        camera_y = player.pos[1] - HEIGHT // 2 
+
+        #Initialize enemies
+        enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
+                       HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
         enemies = []
-        amount_of_enemies = int(1.5 * WAVE)
+        amount_of_enemies = 3
+
         ranged_enemies = []
-        amount_of_ranged = int(0.5 * WAVE)
-        
-        # Spawns enemies randomly around the map
-        for i in range(amount_of_enemies):
-            x_variation = random.randint(0, 100)
-            y_variation = random.randint(0, 100)           
-            enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
-            enemies.append(enemy)
-        
-        for i in range(amount_of_ranged):
-            x_variation = random.randint(0, 180)
-            y_variation = random.randint(0, 180)
-            
+        amount_of_ranged = 1
+
+        bouncing_objects = []
+        exploding_objects = []
+        healing_potion = HealingPotion(905, 775)
+
+
+        for i in range(amount_of_ranged):        
+            x_variation = random.randint(350, 650)
+            y_variation = random.randint(300, 400)
+
             enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
             ranged_enemies.append(enemy)
-    else:
-        enemy_start = [2971, 740]
-        bob = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 3.5, 450, "BOB", 25, 1, player, 0, 0)    
-        enemies.append(bob)
-    
-    healing_potion.activate()
-        
-def initialize_game():
-    global player, enemies, ranged_enemies, bouncing_objects, exploding_objects, NPCs, WAVE, SCORE, healing_potion
-    SCORE = 0
-    WAVE = 0
-    # Initialize player
-    NPCs = []
-    NPCs.append(NPC([865,745]))
-    player = Player(743, 254, PLAYER_SPEED, 100, "Player 1", 15, 1)
-    camera_x = player.pos[0] - WIDTH // 2
-    camera_y = player.pos[1] - HEIGHT // 2 
 
-    #Initialize enemies
-    enemy_start = [WIDTH / 2 - (camera_x - (BACKGROUND_WIDTH - WIDTH) / 2),
-                   HEIGHT / 2 - (camera_y - (BACKGROUND_HEIGHT - HEIGHT) / 2)]
-    enemies = []
-    amount_of_enemies = 3
-    
-    ranged_enemies = []
-    amount_of_ranged = 1
-    
-    bouncing_objects = []
-    exploding_objects = []
-    healing_potion = HealingPotion(905, 775)
-    
-    
-    for i in range(amount_of_ranged):        
-        x_variation = random.randint(350, 650)
-        y_variation = random.randint(300, 400)
-        
-        enemy = RangedEnemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
-        ranged_enemies.append(enemy)
-        
-    # Spawns enemies randomly around the map
-    for i in range(amount_of_enemies):
-        
-        x_variation = random.randint(350, 650)
-        y_variation = random.randint(300, 400)
-        
-        enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
-        enemies.append(enemy)
+        # Spawns enemies randomly around the map
+        for i in range(amount_of_enemies):
 
-    # Run all initial set-ups
-    Backgrounds.create_grid()
-    Backgrounds.create_walls()
+            x_variation = random.randint(350, 650)
+            y_variation = random.randint(300, 400)
+
+            enemy = Enemy(enemy_start[0], enemy_start[1], PLAYER_SPEED - 2, 100, "Player 1", 15, 1, player, x_variation, y_variation)
+            enemies.append(enemy)
+
+        # Run all initial set-ups
+        Backgrounds.create_grid()
+        Backgrounds.create_walls()
     
 
     
-def game_reset():
-    global DEATH_SCREEN, LIVES, SCORE, HIGH_SCORE
-    
-    frame.set_draw_handler(Welcome.draw)
-    frame.set_mouseclick_handler(Welcome.welcome_click)
-    DEATH_SCREEN = True
-    LIVES = 3
-    if SCORE >= HIGH_SCORE:	
-        HIGH_SCORE = SCORE
-    
-    enemies.clear()
-    ranged_enemies.clear()
-    bouncing_objects.clear()
+    def game_reset():
+        global DEATH_SCREEN, LIVES, SCORE, HIGH_SCORE
+
+        frame.set_draw_handler(Welcome.draw)
+        frame.set_mouseclick_handler(Welcome.welcome_click)
+        DEATH_SCREEN = True
+        LIVES = 3
+        if SCORE >= HIGH_SCORE:	
+            HIGH_SCORE = SCORE
+
+        enemies.clear()
+        ranged_enemies.clear()
+        bouncing_objects.clear()
     
 
 # Create the game frame
